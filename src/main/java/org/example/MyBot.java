@@ -10,13 +10,10 @@ import java.util.List;
 
 public class MyBot extends TelegramLongPollingBot {
     private List<CommunityUser> communityUsers;
-
-    // תיקון 1: הגדרת המשתנה ברמת המחלקה כדי שכל הפונקציות יכירו אותו
     private DashboardFrame dashboard;
 
     public MyBot(DashboardFrame dashboard) {
         this.communityUsers = new ArrayList<>();
-        // תיקון 2: שמירת החלון שהתקבל לתוך המשתנה של המחלקה
         this.dashboard = dashboard;
     }
 
@@ -31,15 +28,10 @@ public class MyBot extends TelegramLongPollingBot {
             if (messageText.equals("היי") || messageText.equalsIgnoreCase("hi") || messageText.equals("/start")) {
 
                 if (!isUserExists(chatId)) {
-                    // תיקון 3: השארנו את יצירת המשתנה רק פעם אחת, בתוך התנאי
                     CommunityUser newUser = new CommunityUser(chatId, firstName, username);
-                    communityUsers.add(newUser);
-
-                    // עכשיו זה יעבוד כי dashboard מוכר למחלקה
-                    dashboard.addUserToTable(newUser);
-
-                    // תיקון 4: קריאה לפונקציה שמעדכנת את שאר הקהילה
-                    notifyOtherMembers(newUser);
+                    this.communityUsers.add(newUser);
+                    this.dashboard.addUserToTable(newUser);
+                    this.notifyOtherMembers(newUser);
                 } else {
                     System.out.println("המשתמש כבר קיים בקהילה, ולכן לא יתווסף שוב.");
                 }
@@ -49,9 +41,9 @@ public class MyBot extends TelegramLongPollingBot {
 
     private void notifyOtherMembers(CommunityUser newMember) {
         String text = "משתמש חדש הצטרף: " + newMember.getFirstName() + "\n" +
-                "גודל הקהילה העדכני: " + communityUsers.size() + " חברים.";
+                "גודל הקהילה העדכני: " + this.communityUsers.size() + " חברים.";
 
-        for (CommunityUser user : communityUsers) {
+        for (CommunityUser user : this.communityUsers) {
             if (user.getChatId() != newMember.getChatId()) {
                 SendMessage message = new SendMessage();
                 message.setChatId(user.getChatId());
@@ -66,7 +58,7 @@ public class MyBot extends TelegramLongPollingBot {
     }
 
     private boolean isUserExists(long targetChatId) {
-        for (CommunityUser user : communityUsers) {
+        for (CommunityUser user : this.communityUsers) {
             if (user.getChatId() == targetChatId) {
                 return true;
             }
