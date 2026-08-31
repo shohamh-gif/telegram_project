@@ -7,20 +7,15 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 public class Main {
     public static void main(String[] args) {
 
-        // --- בדיקה קצרה של מחלקת המשתמש שלנו ---
-        CommunityUser testUser = new CommunityUser(112233L, "Shoham", "shoham_h");
+        // 1. יצירת והצגת חדר הבקרה הגרפי (Swing)
+        DashboardFrame dashboard = new DashboardFrame();
+        dashboard.setVisible(true);
 
-        System.out.println("New user created!");
-        System.out.println("Name: " + testUser.getFirstName());
-        System.out.println("Username: @" + testUser.getTelegramUsername());
-        System.out.println("Join time: " + testUser.getFormattedJoinTime()); // זה המבחן האמיתי!
-        System.out.println("----------------------------------");
-
-        // --- הקוד המקורי של הבוט ---
+        // 2. הפעלת הבוט והעברת החלון אליו כדי שיוכל לעדכן אותו
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-            api.registerBot(new MyBot());
-            System.out.println("Bot is running...");
+            api.registerBot(new MyBot(dashboard)); // שולחים לבוט את החלון שיצרנו
+            System.out.println("Bot and UI are running...");
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }

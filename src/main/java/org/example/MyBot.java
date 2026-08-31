@@ -11,7 +11,7 @@ import java.util.List;
 public class MyBot extends TelegramLongPollingBot {
     private List<CommunityUser> communityUsers;
 
-    public MyBot() {
+    public MyBot(DashboardFrame dashboard) {
         this.communityUsers = new ArrayList<>();
     }
 

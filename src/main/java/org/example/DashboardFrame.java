@@ -2,64 +2,89 @@ package org.example;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 
 public class DashboardFrame extends JFrame {
     private DefaultTableModel tableModel;
     private JLabel totalMembersLabel;
 
+    // --- פלטת הצבעים לעיצוב ---
+    private Color backgroundPink = new Color(255, 235, 240); // ורוד פסטל בהיר לרקע
+    private Color buttonPink = new Color(255, 143, 171); // ורוד חזק לכפתורים
+    private Color headerPink = new Color(255, 182, 193); // ורוד לכותרת של הטבלה
+    private Color darkText = new Color(70, 70, 70); // אפור כהה לטקסט (קריא יותר משחור)
+
     public DashboardFrame() {
         setTitle("מערכת ניהול סקרים - חדר בקרה");
-        setSize(700, 450);
+        setSize(750, 480);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(15, 15)); // הוספת ריווח (Padding) כדי שלא ייראה צפוף
-        setLocationRelativeTo(null); // פותח את החלון בדיוק באמצע המסך
+        setLocationRelativeTo(null); // אמצע המסך
 
-        // --- אזור עליון: מונה משתמשים ---
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // פאנל ראשי עם ריווח כדי שהכל ינשום
+        JPanel mainPanel = new JPanel(new BorderLayout(20, 20));
+        mainPanel.setBackground(backgroundPink);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setContentPane(mainPanel);
+
+        // --- אזור עליון: כפתור ומונה ---
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(backgroundPink);
+
         totalMembersLabel = new JLabel("סה\"כ חברים בקהילה: 0");
-        totalMembersLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        totalMembersLabel.setForeground(new Color(41, 128, 185)); // צבע כחול נעים
-        topPanel.add(totalMembersLabel);
-        add(topPanel, BorderLayout.NORTH);
+        totalMembersLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        totalMembersLabel.setForeground(darkText);
 
-        // --- אזור מרכזי: טבלת הקהילה ---
-        // שמות העמודות בדיוק לפי דרישות הפרויקט (מסודר מימין לשמאל)
+        // כפתור מעוצב בסגנון שטוח (כמו שביקשת)
+        JButton createSurveyBtn = new JButton("צור סקר חדש");
+        createSurveyBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        createSurveyBtn.setBackground(buttonPink);
+        createSurveyBtn.setForeground(Color.WHITE);
+        createSurveyBtn.setFocusPainted(false); // מבטל את הריבוע המכוער של הלחיצה
+        createSurveyBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // מגדיל את הכפתור
+
+        topPanel.add(totalMembersLabel, BorderLayout.EAST);
+        topPanel.add(createSurveyBtn, BorderLayout.WEST); // נוסיף לו פונקציונליות בהמשך
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+
+        // --- אזור מרכזי: טבלת הקהילה מעוצבת ---
         String[] columnNames = {"מועד הצטרפות", "Telegram Username", "שם מלא"};
 
-        // מודל הטבלה שולט בנתונים
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // מונע מהמשתמש לערוך את הטקסט בטבלה בטעות
+                return false;
             }
         };
 
         JTable usersTable = new JTable(tableModel);
+        usersTable.setRowHeight(35); // שורות רחבות
+        usersTable.setFont(new Font("Arial", Font.PLAIN, 15));
+        usersTable.setForeground(darkText);
+        usersTable.setSelectionBackground(buttonPink); // צבע בחירה בטבלה
+        usersTable.setSelectionForeground(Color.WHITE);
+        usersTable.setShowVerticalLines(false); // מראה נקי יותר בלי קווים לאורך
 
-        // עיצוב הטבלה ל-UX מושלם
-        usersTable.setRowHeight(30); // שורות מרווחות ונוחות לקריאה
-        usersTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
-        usersTable.getTableHeader().setBackground(new Color(236, 240, 241));
-        usersTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        // עיצוב כותרת הטבלה
+        JTableHeader tableHeader = usersTable.getTableHeader();
+        tableHeader.setFont(new Font("Arial", Font.BOLD, 15));
+        tableHeader.setBackground(headerPink);
+        tableHeader.setForeground(darkText);
+        tableHeader.setReorderingAllowed(false);
 
+        // מוסיף גלילה אם יש הרבה אנשים
         JScrollPane scrollPane = new JScrollPane(usersTable);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setBorder(BorderFactory.createLineBorder(headerPink, 2)); // מסגרת ורודה לטבלה
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
-    // הפונקציה הזו היא הקסם - הבוט יקרא לה בכל פעם שמישהו אומר "היי"
     public void addUserToTable(CommunityUser user) {
-        // מוקש 100: עדכון UI חייב לקרות דרך ה-Thread של Swing!
         SwingUtilities.invokeLater(() -> {
             String username = user.getTelegramUsername() != null ? "@" + user.getTelegramUsername() : "אין";
-
-            // מוסיפים את השורה החדשה לטבלה
             Object[] rowData = {user.getFormattedJoinTime(), username, user.getFirstName()};
             tableModel.addRow(rowData);
-
-            // מעדכנים את המונה למעלה
-            int currentCount = tableModel.getRowCount();
-            totalMembersLabel.setText("סה\"כ חברים בקהילה: " + currentCount);
+            totalMembersLabel.setText("סה\"כ חברים בקהילה: " + tableModel.getRowCount());
         });
     }
 }
