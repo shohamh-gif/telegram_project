@@ -11,8 +11,13 @@ import java.util.List;
 public class MyBot extends TelegramLongPollingBot {
     private List<CommunityUser> communityUsers;
 
+    // תיקון 1: הגדרת המשתנה ברמת המחלקה כדי שכל הפונקציות יכירו אותו
+    private DashboardFrame dashboard;
+
     public MyBot(DashboardFrame dashboard) {
         this.communityUsers = new ArrayList<>();
+        // תיקון 2: שמירת החלון שהתקבל לתוך המשתנה של המחלקה
+        this.dashboard = dashboard;
     }
 
     @Override
@@ -22,15 +27,21 @@ public class MyBot extends TelegramLongPollingBot {
             long chatId = update.getMessage().getChatId();
             String firstName = update.getMessage().getFrom().getFirstName();
             String username = update.getMessage().getFrom().getUserName();
-            if (messageText.equals("היי") || messageText.equalsIgnoreCase("hi") || messageText.equals("/start")) {
-                CommunityUser newUser = new CommunityUser(chatId, firstName, username);
 
-                if (!communityUsers.contains(newUser)) {
+            if (messageText.equals("היי") || messageText.equalsIgnoreCase("hi") || messageText.equals("/start")) {
+
+                if (!isUserExists(chatId)) {
+                    // תיקון 3: השארנו את יצירת המשתנה רק פעם אחת, בתוך התנאי
+                    CommunityUser newUser = new CommunityUser(chatId, firstName, username);
                     communityUsers.add(newUser);
-                    System.out.println(firstName + " הצטרף לקהילה בשעה " + newUser.getFormattedJoinTime() + "!");
+
+                    // עכשיו זה יעבוד כי dashboard מוכר למחלקה
+                    dashboard.addUserToTable(newUser);
+
+                    // תיקון 4: קריאה לפונקציה שמעדכנת את שאר הקהילה
                     notifyOtherMembers(newUser);
                 } else {
-                    System.out.println(firstName + " ניסה להצטרף שוב, אבל הוא כבר בפנים.");
+                    System.out.println("המשתמש כבר קיים בקהילה, ולכן לא יתווסף שוב.");
                 }
             }
         }
@@ -52,6 +63,15 @@ public class MyBot extends TelegramLongPollingBot {
                 }
             }
         }
+    }
+
+    private boolean isUserExists(long targetChatId) {
+        for (CommunityUser user : communityUsers) {
+            if (user.getChatId() == targetChatId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
