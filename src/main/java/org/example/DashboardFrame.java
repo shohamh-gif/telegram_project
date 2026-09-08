@@ -102,6 +102,12 @@ public class DashboardFrame extends JFrame {
         return panel;
     }
 
+    // ==========================================
+    // מסך 2: יצירת סקר
+    // ==========================================
+    // ==========================================
+    // מסך 2: יצירת סקר
+    // ==========================================
     private JPanel createSurveyPanel() {
         JPanel panel = new JPanel(new BorderLayout(GAP, GAP));
         panel.setBackground(BACKGROUND_PINK);
@@ -112,13 +118,134 @@ public class DashboardFrame extends JFrame {
         titleLabel.setForeground(DARK_TEXT);
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        JButton backBtn = new JButton("חזור");
+        JPanel formPanel = new JPanel(new BorderLayout(GAP, GAP));
+        formPanel.setBackground(BACKGROUND_PINK);
+
+        // בחירת סוג סקר (הפעלת RTL כדי ש"יצירה ידנית" יהיה בצד ימין)
+        JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        radioPanel.setBackground(BACKGROUND_PINK);
+        radioPanel.applyComponentOrientation(java.awt.ComponentOrientation.RIGHT_TO_LEFT);
+
+        JRadioButton manualRadio = new JRadioButton("יצירה ידנית");
+        JRadioButton aiRadio = new JRadioButton("ChatGPT (אוטומטי)");
+        manualRadio.setFont(new Font(FONT_NAME, Font.PLAIN, 16));
+        aiRadio.setFont(new Font(FONT_NAME, Font.PLAIN, 16));
+        manualRadio.setBackground(BACKGROUND_PINK);
+        aiRadio.setBackground(BACKGROUND_PINK);
+        manualRadio.setSelected(true);
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(manualRadio);
+        group.add(aiRadio);
+        radioPanel.add(manualRadio);
+        radioPanel.add(aiRadio);
+        formPanel.add(radioPanel, BorderLayout.NORTH);
+
+        CardLayout inputCardLayout = new CardLayout();
+        JPanel inputContainer = new JPanel(inputCardLayout);
+        inputContainer.setBackground(BACKGROUND_PINK);
+
+        // תצוגה 1: טופס ידני (שימוש ב-GridLayout יציב)
+        JPanel manualQuestionsContainer = new JPanel(new GridLayout(3, 1, 0, 0));
+        manualQuestionsContainer.setBackground(BACKGROUND_PINK);
+        manualQuestionsContainer.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        manualQuestionsContainer.add(createQuestionBlock(1));
+        manualQuestionsContainer.add(createQuestionBlock(2));
+        manualQuestionsContainer.add(createQuestionBlock(3));
+
+        // פאנל עוטף
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(BACKGROUND_PINK);
+        wrapper.add(manualQuestionsContainer, BorderLayout.NORTH);
+
+        JScrollPane manualScroll = new JScrollPane(wrapper);
+        manualScroll.setBorder(null);
+        manualScroll.getViewport().setBackground(BACKGROUND_PINK);
+        manualScroll.getVerticalScrollBar().setUnitIncrement(16);
+        manualScroll.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        inputContainer.add(manualScroll, "Manual");
+        // תצוגה 2: טופס אוטומטי (הפעלת RTL)
+        JPanel aiPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        aiPanel.setBackground(BACKGROUND_PINK);
+        aiPanel.applyComponentOrientation(java.awt.ComponentOrientation.RIGHT_TO_LEFT);
+
+        aiPanel.add(new JLabel("הזן נושא לסקר:"));
+        aiPanel.add(new JTextField(20));
+        inputContainer.add(aiPanel, "AI");
+
+        formPanel.add(inputContainer, BorderLayout.CENTER);
+
+        // אזור טיימר השהיה (הפעלת RTL)
+        JPanel delayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        delayPanel.setBackground(BACKGROUND_PINK);
+        delayPanel.applyComponentOrientation(java.awt.ComponentOrientation.RIGHT_TO_LEFT);
+
+        delayPanel.add(new JLabel("השהיה לפני שליחה (בדקות, 0 למיידי):"));
+        JTextField delayField = new JTextField("0", 5);
+        delayPanel.add(delayField);
+        formPanel.add(delayPanel, BorderLayout.SOUTH);
+
+        panel.add(formPanel, BorderLayout.CENTER);
+
+        manualRadio.addActionListener(e -> inputCardLayout.show(inputContainer, "Manual"));
+        aiRadio.addActionListener(e -> inputCardLayout.show(inputContainer, "AI"));
+
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        bottomPanel.setBackground(BACKGROUND_PINK);
+
+        JButton sendBtn = new JButton("שלח סקר");
+        styleButton(sendBtn);
+
+        JButton backBtn = new JButton("ביטול וחזור");
         styleButton(backBtn);
         backBtn.addActionListener(e -> cardLayout.show(mainContainer, VIEW_DASHBOARD));
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        bottomPanel.setBackground(BACKGROUND_PINK);
+
+        bottomPanel.add(sendBtn);
         bottomPanel.add(backBtn);
+
         panel.add(bottomPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createQuestionBlock(int qNum) {
+        JPanel panel = new JPanel(new GridLayout(5, 1, 0, 10)); // ריווח קצת יותר גדול בין השורות
+        panel.setBackground(BACKGROUND_PINK);
+        panel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        String optionalText = (qNum > 1) ? " (אופציונלי):" : ":";
+        String[] labels = {
+                "שאלה " + qNum + optionalText,
+                "תשובה 1:",
+                "תשובה 2:",
+                "תשובה 3 (אופציונלי):",
+                "תשובה 4 (אופציונלי):"
+        };
+
+        for (String labelText : labels) {
+            JPanel rowPanel = new JPanel(new BorderLayout(15, 0));
+            rowPanel.setBackground(BACKGROUND_PINK);
+            rowPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+            JLabel label = new JLabel(labelText);
+            label.setPreferredSize(new Dimension(140, 20));
+            rowPanel.add(label, BorderLayout.LINE_START);
+
+            // התיקון הגדול: הגדרת 30 עמודות וגובה קבוע כדי למנוע מעיכה
+            JTextField textField = new JTextField(30);
+            textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 20));
+            rowPanel.add(textField, BorderLayout.CENTER);
+
+            panel.add(rowPanel);
+        }
+
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(15, 0, 15, 0),
+                BorderFactory.createMatteBorder(0, 0, 2, 0, HEADER_PINK)
+        ));
+
         return panel;
     }
 
