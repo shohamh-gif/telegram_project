@@ -11,6 +11,8 @@ public class DashboardFrame extends JFrame {
     private JPanel mainContainer;
     private DefaultTableModel tableModel;
     private JLabel totalMembersLabel;
+    private SurveyApiService apiService;
+    private JTextField aiTopicField;
 
     private final String VIEW_DASHBOARD = "Dashboard";
     private final String VIEW_SURVEY = "Survey";
@@ -23,6 +25,7 @@ public class DashboardFrame extends JFrame {
     private final Color DARK_TEXT = new Color(80, 80, 80);
 
     public DashboardFrame() {
+        this.apiService = new SurveyApiService();
         this.setTitle("מערכת ניהול סקרים - חדר בקרה");
         this.setSize(750, 480);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -183,7 +186,10 @@ public class DashboardFrame extends JFrame {
         aiPanel.setBackground(this.BACKGROUND_PINK);
         aiPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         aiPanel.add(new JLabel("הזן נושא לסקר:"));
-        aiPanel.add(new JTextField(20));
+
+        this.aiTopicField = new JTextField(20);
+        aiPanel.add(this.aiTopicField);
+
         return aiPanel;
     }
 
@@ -204,6 +210,45 @@ public class DashboardFrame extends JFrame {
         JButton backBtn = this.createStyledButton("ביטול וחזור");
 
         backBtn.addActionListener(e -> this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD));
+
+        sendBtn.addActionListener(e -> {
+            String topic = this.aiTopicField.getText().trim();
+            if (topic.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            sendBtn.setEnabled(false);
+            sendBtn.setText("מייצר סקר...");
+
+            // ביצוע בקשת הרשת ברקע למניעת קפיאת מסך
+            new SwingWorker<String, Void>() {
+                @Override
+                protected String doInBackground() {
+                    return apiService.generateSurvey(topic);
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        String result = get();
+                        if (result != null) {
+                            System.out.println("התקבל מ-ChatGPT:\n" + result);
+                            JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נוצר בהצלחה! (התוצאה הודפסה לקונסולה)", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+                            aiTopicField.setText(""); // ניקוי השדה
+                            cardLayout.show(mainContainer, VIEW_DASHBOARD); // חזרה למסך הראשי
+                        } else {
+                            JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        sendBtn.setEnabled(true);
+                        sendBtn.setText("שלח סקר");
+                    }
+                }
+            }.execute();
+        });
 
         bottomPanel.add(sendBtn);
         bottomPanel.add(backBtn);
@@ -230,11 +275,11 @@ public class DashboardFrame extends JFrame {
             rowPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
             JLabel label = new JLabel(labelText);
-            label.setPreferredSize(new Dimension(140, 35));
+            label.setPreferredSize(new Dimension(140, 20));
             rowPanel.add(label, BorderLayout.LINE_START);
 
             JTextField textField = new JTextField(30);
-            textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 35));
+            textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 20));
             rowPanel.add(textField, BorderLayout.CENTER);
 
             panel.add(rowPanel);
