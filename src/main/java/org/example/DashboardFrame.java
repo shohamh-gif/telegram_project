@@ -9,75 +9,75 @@ import java.awt.*;
 public class DashboardFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainContainer;
-    private final String VIEW_DASHBOARD = "Dashboard";
-    private final String VIEW_SURVEY = "Survey";
-
     private DefaultTableModel tableModel;
     private JLabel totalMembersLabel;
 
-    private final int WIDTH = 750;
-    private final int HEIGHT = 480;
-    private final int PADDING = 25;
-    private final int GAP = 20;
-    private final int ROW_HEIGHT = 40;
-
-    private final String FRAME_TITLE = "מערכת ניהול סקרים - חדר בקרה";
+    private final String VIEW_DASHBOARD = "Dashboard";
+    private final String VIEW_SURVEY = "Survey";
     private final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
     private final String FONT_NAME = "Segoe UI";
+
     private final Color BACKGROUND_PINK = new Color(253, 245, 247);
     private final Color HEADER_PINK = new Color(250, 220, 228);
     private final Color BUTTON_PINK = new Color(248, 190, 205);
     private final Color DARK_TEXT = new Color(80, 80, 80);
 
     public DashboardFrame() {
-        setTitle(FRAME_TITLE);
-        setSize(WIDTH, HEIGHT);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        this.setTitle("מערכת ניהול סקרים - חדר בקרה");
+        this.setSize(750, 480);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setLocationRelativeTo(null);
 
-        cardLayout = new CardLayout();
-        mainContainer = new JPanel(cardLayout);
-        setContentPane(mainContainer);
+        this.cardLayout = new CardLayout();
+        this.mainContainer = new JPanel(this.cardLayout);
+        this.setContentPane(this.mainContainer);
 
-        mainContainer.add(createDashboardPanel(), VIEW_DASHBOARD);
-        mainContainer.add(createSurveyPanel(), VIEW_SURVEY);
-        cardLayout.show(mainContainer, VIEW_DASHBOARD);
+        this.mainContainer.add(this.createDashboardPanel(), this.VIEW_DASHBOARD);
+        this.mainContainer.add(this.createSurveyPanel(), this.VIEW_SURVEY);
+
+        this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD);
     }
 
     private JPanel createDashboardPanel() {
-        JPanel panel = new JPanel(new BorderLayout(GAP, GAP));
-        panel.setBackground(BACKGROUND_PINK);
-        panel.setBorder(BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING, PADDING));
+        JPanel panel = new JPanel(new BorderLayout(20, 20));
+        panel.setBackground(this.BACKGROUND_PINK);
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
+        panel.add(this.createTopPanel(), BorderLayout.NORTH);
+        panel.add(this.createTablePanel(), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel createTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(BACKGROUND_PINK);
+        topPanel.setBackground(this.BACKGROUND_PINK);
 
-        totalMembersLabel = new JLabel(MEMBERS_PREFIX + "0");
-        totalMembersLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
-        totalMembersLabel.setForeground(DARK_TEXT);
+        this.totalMembersLabel = new JLabel(this.MEMBERS_PREFIX + "0");
+        this.totalMembersLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 18));
+        this.totalMembersLabel.setForeground(this.DARK_TEXT);
 
-        JButton createSurveyBtn = new JButton("צור סקר חדש");
-        styleButton(createSurveyBtn);
-        createSurveyBtn.addActionListener(e -> cardLayout.show(mainContainer, VIEW_SURVEY));
+        JButton createSurveyBtn = this.createStyledButton("צור סקר חדש");
+        createSurveyBtn.addActionListener(e -> this.cardLayout.show(this.mainContainer, this.VIEW_SURVEY));
 
-        topPanel.add(totalMembersLabel, BorderLayout.EAST);
+        topPanel.add(this.totalMembersLabel, BorderLayout.EAST);
         topPanel.add(createSurveyBtn, BorderLayout.WEST);
-        panel.add(topPanel, BorderLayout.NORTH);
+        return topPanel;
+    }
 
+    private JScrollPane createTablePanel() {
         String[] columnNames = {"מועד הצטרפות", "Telegram Username", "שם מלא"};
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        this.tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
 
-        JTable usersTable = new JTable(tableModel);
-        usersTable.setRowHeight(ROW_HEIGHT);
-        usersTable.setFont(new Font(FONT_NAME, Font.PLAIN, 14));
-        usersTable.setForeground(DARK_TEXT);
-        usersTable.setSelectionBackground(HEADER_PINK);
-        usersTable.setSelectionForeground(DARK_TEXT);
+        JTable usersTable = new JTable(this.tableModel);
+        usersTable.setRowHeight(40);
+        usersTable.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
+        usersTable.setForeground(this.DARK_TEXT);
+        usersTable.setSelectionBackground(this.HEADER_PINK);
+        usersTable.setSelectionForeground(this.DARK_TEXT);
         usersTable.setShowGrid(false);
         usersTable.setBackground(Color.WHITE);
 
@@ -88,50 +88,60 @@ public class DashboardFrame extends JFrame {
         }
 
         JTableHeader tableHeader = usersTable.getTableHeader();
-        tableHeader.setFont(new Font(FONT_NAME, Font.BOLD, 14));
-        tableHeader.setBackground(HEADER_PINK);
-        tableHeader.setForeground(DARK_TEXT);
+        tableHeader.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
+        tableHeader.setBackground(this.HEADER_PINK);
+        tableHeader.setForeground(this.DARK_TEXT);
         tableHeader.setReorderingAllowed(false);
         tableHeader.setPreferredSize(new Dimension(100, 35));
 
         JScrollPane scrollPane = new JScrollPane(usersTable);
         scrollPane.getViewport().setBackground(Color.WHITE);
-        scrollPane.setBorder(BorderFactory.createLineBorder(HEADER_PINK, 1, true));
-        panel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setBorder(BorderFactory.createLineBorder(this.HEADER_PINK, 1, true));
+        return scrollPane;
+    }
+
+    private JPanel createSurveyPanel() {
+        JPanel panel = new JPanel(new BorderLayout(20, 20));
+        panel.setBackground(this.BACKGROUND_PINK);
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+
+        JLabel titleLabel = new JLabel("הגדרות סקר חדש", SwingConstants.CENTER);
+        titleLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 22));
+        titleLabel.setForeground(this.DARK_TEXT);
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel formPanel = new JPanel(new BorderLayout(20, 20));
+        formPanel.setBackground(this.BACKGROUND_PINK);
+
+        CardLayout inputCardLayout = new CardLayout();
+        JPanel inputContainer = new JPanel(inputCardLayout);
+        inputContainer.setBackground(this.BACKGROUND_PINK);
+
+        inputContainer.add(this.createManualPanel(), "Manual");
+        inputContainer.add(this.createAIPanel(), "AI");
+
+        formPanel.add(this.createRadioPanel(inputCardLayout, inputContainer), BorderLayout.NORTH);
+        formPanel.add(inputContainer, BorderLayout.CENTER);
+        formPanel.add(this.createDelayPanel(), BorderLayout.SOUTH);
+
+        panel.add(formPanel, BorderLayout.CENTER);
+        panel.add(this.createBottomButtonsPanel(), BorderLayout.SOUTH);
 
         return panel;
     }
 
-    // ==========================================
-    // מסך 2: יצירת סקר
-    // ==========================================
-    // ==========================================
-    // מסך 2: יצירת סקר
-    // ==========================================
-    private JPanel createSurveyPanel() {
-        JPanel panel = new JPanel(new BorderLayout(GAP, GAP));
-        panel.setBackground(BACKGROUND_PINK);
-        panel.setBorder(BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING, PADDING));
-
-        JLabel titleLabel = new JLabel("הגדרות סקר חדש", SwingConstants.CENTER);
-        titleLabel.setFont(new Font(FONT_NAME, Font.BOLD, 22));
-        titleLabel.setForeground(DARK_TEXT);
-        panel.add(titleLabel, BorderLayout.NORTH);
-
-        JPanel formPanel = new JPanel(new BorderLayout(GAP, GAP));
-        formPanel.setBackground(BACKGROUND_PINK);
-
-        // בחירת סוג סקר (הפעלת RTL כדי ש"יצירה ידנית" יהיה בצד ימין)
+    private JPanel createRadioPanel(CardLayout inputCardLayout, JPanel inputContainer) {
         JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        radioPanel.setBackground(BACKGROUND_PINK);
-        radioPanel.applyComponentOrientation(java.awt.ComponentOrientation.RIGHT_TO_LEFT);
+        radioPanel.setBackground(this.BACKGROUND_PINK);
+        radioPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
         JRadioButton manualRadio = new JRadioButton("יצירה ידנית");
         JRadioButton aiRadio = new JRadioButton("ChatGPT (אוטומטי)");
-        manualRadio.setFont(new Font(FONT_NAME, Font.PLAIN, 16));
-        aiRadio.setFont(new Font(FONT_NAME, Font.PLAIN, 16));
-        manualRadio.setBackground(BACKGROUND_PINK);
-        aiRadio.setBackground(BACKGROUND_PINK);
+
+        manualRadio.setFont(new Font(this.FONT_NAME, Font.PLAIN, 16));
+        aiRadio.setFont(new Font(this.FONT_NAME, Font.PLAIN, 16));
+        manualRadio.setBackground(this.BACKGROUND_PINK);
+        aiRadio.setBackground(this.BACKGROUND_PINK);
         manualRadio.setSelected(true);
 
         ButtonGroup group = new ButtonGroup();
@@ -139,80 +149,70 @@ public class DashboardFrame extends JFrame {
         group.add(aiRadio);
         radioPanel.add(manualRadio);
         radioPanel.add(aiRadio);
-        formPanel.add(radioPanel, BorderLayout.NORTH);
-
-        CardLayout inputCardLayout = new CardLayout();
-        JPanel inputContainer = new JPanel(inputCardLayout);
-        inputContainer.setBackground(BACKGROUND_PINK);
-
-        // תצוגה 1: טופס ידני (שימוש ב-GridLayout יציב)
-        JPanel manualQuestionsContainer = new JPanel(new GridLayout(3, 1, 0, 0));
-        manualQuestionsContainer.setBackground(BACKGROUND_PINK);
-        manualQuestionsContainer.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        manualQuestionsContainer.add(createQuestionBlock(1));
-        manualQuestionsContainer.add(createQuestionBlock(2));
-        manualQuestionsContainer.add(createQuestionBlock(3));
-
-        // פאנל עוטף
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(BACKGROUND_PINK);
-        wrapper.add(manualQuestionsContainer, BorderLayout.NORTH);
-
-        JScrollPane manualScroll = new JScrollPane(wrapper);
-        manualScroll.setBorder(null);
-        manualScroll.getViewport().setBackground(BACKGROUND_PINK);
-        manualScroll.getVerticalScrollBar().setUnitIncrement(16);
-        manualScroll.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        inputContainer.add(manualScroll, "Manual");
-        // תצוגה 2: טופס אוטומטי (הפעלת RTL)
-        JPanel aiPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        aiPanel.setBackground(BACKGROUND_PINK);
-        aiPanel.applyComponentOrientation(java.awt.ComponentOrientation.RIGHT_TO_LEFT);
-
-        aiPanel.add(new JLabel("הזן נושא לסקר:"));
-        aiPanel.add(new JTextField(20));
-        inputContainer.add(aiPanel, "AI");
-
-        formPanel.add(inputContainer, BorderLayout.CENTER);
-
-        // אזור טיימר השהיה (הפעלת RTL)
-        JPanel delayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        delayPanel.setBackground(BACKGROUND_PINK);
-        delayPanel.applyComponentOrientation(java.awt.ComponentOrientation.RIGHT_TO_LEFT);
-
-        delayPanel.add(new JLabel("השהיה לפני שליחה (בדקות, 0 למיידי):"));
-        JTextField delayField = new JTextField("0", 5);
-        delayPanel.add(delayField);
-        formPanel.add(delayPanel, BorderLayout.SOUTH);
-
-        panel.add(formPanel, BorderLayout.CENTER);
 
         manualRadio.addActionListener(e -> inputCardLayout.show(inputContainer, "Manual"));
         aiRadio.addActionListener(e -> inputCardLayout.show(inputContainer, "AI"));
 
+        return radioPanel;
+    }
+
+    private JScrollPane createManualPanel() {
+        JPanel manualQuestionsContainer = new JPanel(new GridLayout(3, 1, 0, 0));
+        manualQuestionsContainer.setBackground(this.BACKGROUND_PINK);
+        manualQuestionsContainer.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        manualQuestionsContainer.add(this.createQuestionBlock(1));
+        manualQuestionsContainer.add(this.createQuestionBlock(2));
+        manualQuestionsContainer.add(this.createQuestionBlock(3));
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(this.BACKGROUND_PINK);
+        wrapper.add(manualQuestionsContainer, BorderLayout.NORTH);
+
+        JScrollPane manualScroll = new JScrollPane(wrapper);
+        manualScroll.setBorder(null);
+        manualScroll.getViewport().setBackground(this.BACKGROUND_PINK);
+        manualScroll.getVerticalScrollBar().setUnitIncrement(16);
+        manualScroll.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        return manualScroll;
+    }
+
+    private JPanel createAIPanel() {
+        JPanel aiPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        aiPanel.setBackground(this.BACKGROUND_PINK);
+        aiPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        aiPanel.add(new JLabel("הזן נושא לסקר:"));
+        aiPanel.add(new JTextField(20));
+        return aiPanel;
+    }
+
+    private JPanel createDelayPanel() {
+        JPanel delayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        delayPanel.setBackground(this.BACKGROUND_PINK);
+        delayPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        delayPanel.add(new JLabel("השהיה לפני שליחה (בדקות, 0 למיידי):"));
+        delayPanel.add(new JTextField("0", 5));
+        return delayPanel;
+    }
+
+    private JPanel createBottomButtonsPanel() {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        bottomPanel.setBackground(BACKGROUND_PINK);
+        bottomPanel.setBackground(this.BACKGROUND_PINK);
 
-        JButton sendBtn = new JButton("שלח סקר");
-        styleButton(sendBtn);
+        JButton sendBtn = this.createStyledButton("שלח סקר");
+        JButton backBtn = this.createStyledButton("ביטול וחזור");
 
-        JButton backBtn = new JButton("ביטול וחזור");
-        styleButton(backBtn);
-        backBtn.addActionListener(e -> cardLayout.show(mainContainer, VIEW_DASHBOARD));
+        backBtn.addActionListener(e -> this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD));
 
         bottomPanel.add(sendBtn);
         bottomPanel.add(backBtn);
-
-        panel.add(bottomPanel, BorderLayout.SOUTH);
-
-        return panel;
+        return bottomPanel;
     }
 
     private JPanel createQuestionBlock(int qNum) {
-        JPanel panel = new JPanel(new GridLayout(5, 1, 0, 10)); // ריווח קצת יותר גדול בין השורות
-        panel.setBackground(BACKGROUND_PINK);
+        JPanel panel = new JPanel(new GridLayout(5, 1, 0, 10));
+        panel.setBackground(this.BACKGROUND_PINK);
         panel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
         String optionalText = (qNum > 1) ? " (אופציונלי):" : ":";
@@ -226,16 +226,15 @@ public class DashboardFrame extends JFrame {
 
         for (String labelText : labels) {
             JPanel rowPanel = new JPanel(new BorderLayout(15, 0));
-            rowPanel.setBackground(BACKGROUND_PINK);
+            rowPanel.setBackground(this.BACKGROUND_PINK);
             rowPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
             JLabel label = new JLabel(labelText);
-            label.setPreferredSize(new Dimension(140, 20));
+            label.setPreferredSize(new Dimension(140, 35));
             rowPanel.add(label, BorderLayout.LINE_START);
 
-            // התיקון הגדול: הגדרת 30 עמודות וגובה קבוע כדי למנוע מעיכה
             JTextField textField = new JTextField(30);
-            textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 20));
+            textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 35));
             rowPanel.add(textField, BorderLayout.CENTER);
 
             panel.add(rowPanel);
@@ -243,26 +242,28 @@ public class DashboardFrame extends JFrame {
 
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(15, 0, 15, 0),
-                BorderFactory.createMatteBorder(0, 0, 2, 0, HEADER_PINK)
+                BorderFactory.createMatteBorder(0, 0, 2, 0, this.HEADER_PINK)
         ));
 
         return panel;
     }
 
-    private void styleButton(JButton btn) {
-        btn.setFont(new Font(FONT_NAME, Font.BOLD, 14));
-        btn.setBackground(BUTTON_PINK);
-        btn.setForeground(DARK_TEXT);
+    private JButton createStyledButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
+        btn.setBackground(this.BUTTON_PINK);
+        btn.setForeground(this.DARK_TEXT);
         btn.setPreferredSize(new Dimension(150, 40));
         btn.setFocusPainted(false);
+        return btn;
     }
 
     public void addUserToTable(CommunityUser user) {
         SwingUtilities.invokeLater(() -> {
             String username = user.getTelegramUsername() != null ? "@" + user.getTelegramUsername() : "-";
             Object[] rowData = {user.getFormattedJoinTime(), username, user.getFirstName()};
-            tableModel.addRow(rowData);
-            totalMembersLabel.setText(MEMBERS_PREFIX + tableModel.getRowCount());
+            this.tableModel.addRow(rowData);
+            this.totalMembersLabel.setText(this.MEMBERS_PREFIX + this.tableModel.getRowCount());
         });
     }
 }
