@@ -1,5 +1,7 @@
 package org.example;
 
+import lombok.Setter;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -13,6 +15,8 @@ public class DashboardFrame extends JFrame {
     private JLabel totalMembersLabel;
     private SurveyApiService apiService;
     private JTextField aiTopicField;
+    @Setter
+    private MyBot bot;
 
     private final String VIEW_DASHBOARD = "Dashboard";
     private final String VIEW_SURVEY = "Survey";
@@ -221,7 +225,6 @@ public class DashboardFrame extends JFrame {
             sendBtn.setEnabled(false);
             sendBtn.setText("מייצר סקר...");
 
-            // ביצוע בקשת הרשת ברקע למניעת קפיאת מסך
             new SwingWorker<String, Void>() {
                 @Override
                 protected String doInBackground() {
@@ -232,14 +235,30 @@ public class DashboardFrame extends JFrame {
                 protected void done() {
                     try {
                         String result = get();
+
                         if (result != null) {
                             System.out.println("התקבל מ-ChatGPT:\n" + result);
-                            JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נוצר בהצלחה! (התוצאה הודפסה לקונסולה)", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
-                            aiTopicField.setText(""); // ניקוי השדה
-                            cardLayout.show(mainContainer, VIEW_DASHBOARD); // חזרה למסך הראשי
+
+                            try {
+                                com.google.gson.Gson gson = new com.google.gson.Gson();
+                                SurveyData survey = gson.fromJson(result, SurveyData.class);
+
+                                String chatId = "YOUR_CHAT_ID_HERE"; // המספר שלך
+                                bot.sendSurveyToChat(chatId, survey);
+
+                                JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+                                aiTopicField.setText("");
+                                cardLayout.show(mainContainer, VIEW_DASHBOARD);
+
+                            } catch (Exception ex) {
+                                JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה בפירוק הנתונים או בשליחה לטלגרם.", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                                ex.printStackTrace();
+                            }
                         } else {
                             JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
                         }
+                        // ---> כאן מסתיים הבלוק שהחלפנו <---
+
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     } finally {
@@ -310,5 +329,15 @@ public class DashboardFrame extends JFrame {
             this.tableModel.addRow(rowData);
             this.totalMembersLabel.setText(this.MEMBERS_PREFIX + this.tableModel.getRowCount());
         });
+    }
+
+    private String getSecureToken(String keyName) {
+        java.util.Properties prop = new java.util.Properties();
+        try (java.io.FileInputStream input = new java.io.FileInputStream("config.properties")) {
+            prop.load(input);
+            return prop.getProperty(keyName);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

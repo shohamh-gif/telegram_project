@@ -70,6 +70,22 @@ public class MyBot extends TelegramLongPollingBot {
         return false;
     }
 
+    public void sendSurveyToChat(String chatId, SurveyData survey) {
+        org.telegram.telegrambots.meta.api.methods.polls.SendPoll sendPoll = new org.telegram.telegrambots.meta.api.methods.polls.SendPoll();
+
+        sendPoll.setChatId(chatId);
+        sendPoll.setQuestion(survey.getQuestion()); // לוקח את השאלה מתוך האובייקט
+        sendPoll.setOptions(survey.getAnswers());   // לוקח את התשובות מתוך האובייקט
+
+        try {
+            execute(sendPoll); // פקודה של טלגרם שמשגרת את הסקר
+            System.out.println("הסקר שוגר לטלגרם בהצלחה!");
+        } catch (org.telegram.telegrambots.meta.exceptions.TelegramApiException e) {
+            System.out.println("שגיאה בשליחת הסקר לטלגרם: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String getBotUsername() {
         return "ShohamCodeBot";
