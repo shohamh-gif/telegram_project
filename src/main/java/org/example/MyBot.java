@@ -5,6 +5,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +77,13 @@ public class MyBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "8982163534:AAEDN5jpSa220jvLWJzXjov7iClAhtAVNkM";
+        Properties prop = new Properties();
+        try (FileInputStream input = new FileInputStream("config.properties")) {
+            prop.load(input);
+            return prop.getProperty("BOT_TOKEN");
+        } catch (IOException ex) {
+            System.out.println("שגיאה בקריאת קובץ הטוקן: " + ex.getMessage());
+            return null;
+        }
     }
 }
