@@ -243,7 +243,7 @@ public class DashboardFrame extends JFrame {
                                 com.google.gson.Gson gson = new com.google.gson.Gson();
                                 SurveyData survey = gson.fromJson(result, SurveyData.class);
 
-                                String chatId = "YOUR_CHAT_ID_HERE"; // המספר שלך
+                                String chatId = "6005182811";
                                 bot.sendSurveyToChat(chatId, survey);
 
                                 JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
