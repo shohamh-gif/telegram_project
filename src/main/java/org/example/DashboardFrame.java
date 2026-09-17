@@ -18,6 +18,8 @@ public class DashboardFrame extends JFrame {
     private SurveyApiService apiService;
     private JTextField aiTopicField;
     private List<JTextField> allManualFields;
+    private JTextField delayField;
+    private JLabel countdownLabel;
     @Setter
     private MyBot bot;
 
@@ -196,10 +198,8 @@ public class DashboardFrame extends JFrame {
         aiPanel.setBackground(this.BACKGROUND_PINK);
         aiPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         aiPanel.add(new JLabel("הזן נושא לסקר:"));
-
         this.aiTopicField = new JTextField(20);
         aiPanel.add(this.aiTopicField);
-
         return aiPanel;
     }
 
@@ -208,7 +208,12 @@ public class DashboardFrame extends JFrame {
         delayPanel.setBackground(this.BACKGROUND_PINK);
         delayPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         delayPanel.add(new JLabel("השהיה לפני שליחה (בדקות, 0 למיידי):"));
-        delayPanel.add(new JTextField("0", 5));
+        this.delayField = new JTextField("0", 5);
+        delayPanel.add(this.delayField);
+        this.countdownLabel = new JLabel("");
+        this.countdownLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 16));
+        this.countdownLabel.setForeground(Color.RED);
+        delayPanel.add(this.countdownLabel);
         return delayPanel;
     }
 
@@ -222,96 +227,141 @@ public class DashboardFrame extends JFrame {
         backBtn.addActionListener(e -> this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD));
 
         sendBtn.addActionListener(e -> {
+            if (this.bot.getCommunityUsers().size() < 3) {
+                JOptionPane.showMessageDialog(this, "לא ניתן להתחיל סקר. נדרשים לפחות 3 חברים בקהילה!", "חסימה", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (this.bot.isSurveyActive()) {
+                JOptionPane.showMessageDialog(this, "יש סקר פעיל (או בהשהיה) כרגע! חובה להמתין לסיומו.", "חסימה", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-            // טריק קטן: בודקים אם שדה ה-AI בכלל מוצג כרגע על המסך
-            if (aiTopicField.isShowing()) {
+            // שולפים את הדקות שהמשתמש הקליד
+            int delayMinutes = 0;
+            try {
+                delayMinutes = Integer.parseInt(this.delayField.getText().trim());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "נא להזין מספר דקות תקין!", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-                // --- הלוגיקה של ה-AI (מה שעובד לנו מושלם) ---
-                String topic = this.aiTopicField.getText().trim();
-                if (topic.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                sendBtn.setEnabled(false);
-                sendBtn.setText("מייצר סקר...");
-
-                new SwingWorker<String, Void>() {
-                    @Override
-                    protected String doInBackground() {
-                        return apiService.generateSurvey(topic);
-                    }
-
-                    @Override
-                    protected void done() {
-                        try {
-                            String result = get();
-
-                            if (result != null) {
-                                result = result.replace("```json", "").replace("```", "").trim();
-
-                                try {
-                                    com.google.gson.Gson gson = new com.google.gson.Gson();
-                                    SurveyData survey = gson.fromJson(result, SurveyData.class);
-
-                                    String chatId = "6005182811";
-                                    bot.sendSurveyToChat(chatId, survey);
-
-                                    JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
-                                    aiTopicField.setText("");
-                                    cardLayout.show(mainContainer, VIEW_DASHBOARD);
-
-                                } catch (Exception ex) {
-                                    JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה בפירוק הנתונים או בשליחה לטלגרם.", "שגיאה", JOptionPane.ERROR_MESSAGE);
-                                    ex.printStackTrace();
-                                }
-                            } else {
-                                JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
-                            }
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        } finally {
-                            sendBtn.setEnabled(true);
-                            sendBtn.setText("שלח סקר");
-                        }
-                    }
-                }.execute();
-
+            if (delayMinutes > 0) {
+                startCountdown(delayMinutes, sendBtn);
             } else {
-                String question = allManualFields.get(0).getText().trim();
-
-                if (question.isEmpty()) {
-                    JOptionPane.showMessageDialog(DashboardFrame.this, "נא להזין לפחות את השאלה הראשונה", "שגיאה", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                java.util.List<String> answers = new java.util.ArrayList<>();
-                for (int i = 1; i <= 4; i++) {
-                    String ans = allManualFields.get(i).getText().trim();
-                    if (!ans.isEmpty()) {
-                        answers.add(ans);
-                    }
-                }
-
-                if (answers.size() < 2) {
-                    JOptionPane.showMessageDialog(DashboardFrame.this, "סקר חייב להכיל לפחות 2 תשובות!", "שגיאה", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                SurveyData manualSurvey = new SurveyData(question, answers);
-                String chatId = "6005182811";
-                bot.sendSurveyToChat(chatId, manualSurvey);
-
-                JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר הידני נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
-
-                for (JTextField field : allManualFields) {
-                    field.setText("");
-                }
+                executeSurveyDispatch(sendBtn); // שליחה מיידית
             }
         });
-
         bottomPanel.add(sendBtn);
         bottomPanel.add(backBtn);
         return bottomPanel;
+    }
+
+        // פונקציית העזר שמנתבת איזה סקר לשלוח (AI או ידני)
+        private void executeSurveyDispatch(JButton sendBtn) {
+            if (this.aiTopicField.isShowing()) {
+                handleAISurvey(sendBtn);
+            } else {
+                handleManualSurvey();
+            }
+        }
+
+        // הפונקציה שמפעילה את הספירה לאחור על המסך
+        private void startCountdown(int minutes, JButton sendBtn) {
+            this.bot.setSurveyActive(true); // נועלים כדי שלא יתחילו סקרים אחרים בזמן ההמתנה
+            sendBtn.setEnabled(false);
+
+            int totalSeconds = minutes * 60;
+            int[] timeLeft = {totalSeconds}; // מערך של איבר אחד כדי שנוכל לערוך אותו מתוך הטיימר
+
+            Timer timer = new Timer(1000, null); // טיימר שרץ כל 1000 מילי-שניות (שנייה)
+            timer.addActionListener(e -> {
+                if (timeLeft[0] > 0) {
+                    int mins = timeLeft[0] / 60;
+                    int secs = timeLeft[0] % 60;
+                    this.countdownLabel.setText(String.format("הסקר יישלח בעוד: %02d:%02d", mins, secs));
+                    timeLeft[0]--;
+                } else {
+                    ((Timer)e.getSource()).stop();
+                    this.countdownLabel.setText(""); // מנקים את השעון
+                    executeSurveyDispatch(sendBtn); // הזמן נגמר - משגרים את הסקר!
+                }
+            });
+            timer.start();
+        }
+
+
+
+    // פונקציית עזר פרטית 1: ניתוב וטיפול בסקר AI
+    private void handleAISurvey(JButton sendBtn) {
+        String topic = this.aiTopicField.getText().trim();
+        if (topic.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        this.bot.setSurveyActive(true);
+        sendBtn.setEnabled(false);
+        sendBtn.setText("מייצר סקר...");
+
+        new AiSurveyTask(topic, this.apiService, this.bot, this, sendBtn).execute();
+    }
+
+    public void onAiSurveySuccess() {
+        this.aiTopicField.setText("");
+        this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD);
+    }
+
+    private void handleManualSurvey() {
+        // רשימה שתשמור את כל השאלות התקינות שהוזנו
+        java.util.List<SurveyData> surveyQuestions = new java.util.ArrayList<>();
+
+        // עוברים על 3 הבלוקים (בקפיצות של 5 שדות לכל בלוק)
+        for (int block = 0; block < 3; block++) {
+            int offset = block * 5; // האינדקס של השאלה הנוכחית (0, 5, או 10)
+            String question = this.allManualFields.get(offset).getText().trim();
+
+            // אם השאלה ריקה
+            if (question.isEmpty()) {
+                if (block == 0) {
+                    // חובה למלא לפחות את השאלה הראשונה!
+                    JOptionPane.showMessageDialog(this, "נא להזין לפחות את השאלה הראשונה", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                continue; // שאלות 2 ו-3 הן אופציונליות, אז פשוט נדלג עליהן אם הן ריקות
+            }
+
+            // אם יש שאלה, אוספים את התשובות שלה (4 השדות הבאים)
+            java.util.List<String> answers = new java.util.ArrayList<>();
+            for (int i = 1; i <= 4; i++) {
+                String ans = this.allManualFields.get(offset + i).getText().trim();
+                if (!ans.isEmpty()) {
+                    answers.add(ans);
+                }
+            }
+
+            // מוודאים שיש לפחות 2 תשובות לשאלה הספציפית הזו
+            if (answers.size() < 2) {
+                JOptionPane.showMessageDialog(this, "שאלה " + (block + 1) + " חייבת להכיל לפחות 2 תשובות!", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // שומרים את השאלה התקינה ברשימה
+            surveyQuestions.add(new SurveyData(question, answers));
+        }
+
+        this.bot.setSurveyActive(true); // נועלים את המערכת לסקר חדש
+
+        for (SurveyData poll : surveyQuestions) {
+            this.bot.broadcastSurvey(poll);
+        }
+
+        JOptionPane.showMessageDialog(this, "הסקר הידני נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+
+        // מנקים את כל 15 השדות
+        for (JTextField field : this.allManualFields) {
+            field.setText("");
+        }
+        this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD);
     }
 
     private JPanel createQuestionBlock(int qNum) {
@@ -370,5 +420,11 @@ public class DashboardFrame extends JFrame {
             this.tableModel.addRow(rowData);
             this.totalMembersLabel.setText(this.MEMBERS_PREFIX + this.tableModel.getRowCount());
         });
+    }
+
+    public void broadcastSurvey(SurveyData survey) {
+        for (CommunityUser user : this.communityUsers.values()) {
+            sendSurveyToChat(String.valueOf(user.getChatId()), survey);
+        }
     }
 }

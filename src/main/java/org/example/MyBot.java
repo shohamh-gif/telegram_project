@@ -1,19 +1,27 @@
 package org.example;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MyBot extends TelegramLongPollingBot {
+    @Getter
     private Map<Long, CommunityUser> communityUsers;
     private DashboardFrame dashboard;
+    @Setter
+    @Getter
+    private boolean isSurveyActive;
 
     public MyBot(DashboardFrame dashboard) {
         this.communityUsers = new HashMap<>();
         this.dashboard = dashboard;
+        this.isSurveyActive = false; // אתחול מצב הסקר
     }
 
     @Override
@@ -66,10 +74,17 @@ public class MyBot extends TelegramLongPollingBot {
 
         try {
             execute(sendPoll); // פקודה של טלגרם שמשגרת את הסקר
-            System.out.println("הסקר שוגר לטלגרם בהצלחה!");
-        } catch (org.telegram.telegrambots.meta.exceptions.TelegramApiException e) {
+            System.out.println("הסקר שוגר בהצלחה למשתמש: " + chatId);
+        } catch (TelegramApiException e) {
             System.out.println("שגיאה בשליחת הסקר לטלגרם: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    // הפונקציה החדשה שמפיצה את הסקר לכל חברי הקהילה במקביל!
+    public void broadcastSurvey(SurveyData survey) {
+        for (CommunityUser user : this.communityUsers.values()) {
+            sendSurveyToChat(String.valueOf(user.getChatId()), survey);
         }
     }
 
