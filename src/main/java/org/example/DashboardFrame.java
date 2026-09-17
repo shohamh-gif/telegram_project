@@ -7,6 +7,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardFrame extends JFrame {
     private CardLayout cardLayout;
@@ -15,6 +17,7 @@ public class DashboardFrame extends JFrame {
     private JLabel totalMembersLabel;
     private SurveyApiService apiService;
     private JTextField aiTopicField;
+    private List<JTextField> allManualFields;
     @Setter
     private MyBot bot;
 
@@ -30,6 +33,7 @@ public class DashboardFrame extends JFrame {
 
     public DashboardFrame() {
         this.apiService = new SurveyApiService();
+        this.allManualFields = new ArrayList<>();
         this.setTitle("מערכת ניהול סקרים - חדר בקרה");
         this.setSize(750, 480);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -76,7 +80,9 @@ public class DashboardFrame extends JFrame {
         String[] columnNames = {"מועד הצטרפות", "Telegram Username", "שם מלא"};
         this.tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         JTable usersTable = new JTable(this.tableModel);
@@ -216,57 +222,91 @@ public class DashboardFrame extends JFrame {
         backBtn.addActionListener(e -> this.cardLayout.show(this.mainContainer, this.VIEW_DASHBOARD));
 
         sendBtn.addActionListener(e -> {
-            String topic = this.aiTopicField.getText().trim();
-            if (topic.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
 
-            sendBtn.setEnabled(false);
-            sendBtn.setText("מייצר סקר...");
+            // טריק קטן: בודקים אם שדה ה-AI בכלל מוצג כרגע על המסך
+            if (aiTopicField.isShowing()) {
 
-            new SwingWorker<String, Void>() {
-                @Override
-                protected String doInBackground() {
-                    return apiService.generateSurvey(topic);
+                // --- הלוגיקה של ה-AI (מה שעובד לנו מושלם) ---
+                String topic = this.aiTopicField.getText().trim();
+                if (topic.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                    return;
                 }
 
-                @Override
-                protected void done() {
-                    try {
-                        String result = get();
+                sendBtn.setEnabled(false);
+                sendBtn.setText("מייצר סקר...");
 
-                        if (result != null) {
-                            System.out.println("התקבל מ-ChatGPT:\n" + result);
+                new SwingWorker<String, Void>() {
+                    @Override
+                    protected String doInBackground() {
+                        return apiService.generateSurvey(topic);
+                    }
 
-                            try {
-                                com.google.gson.Gson gson = new com.google.gson.Gson();
-                                SurveyData survey = gson.fromJson(result, SurveyData.class);
+                    @Override
+                    protected void done() {
+                        try {
+                            String result = get();
 
-                                String chatId = "6005182811";
-                                bot.sendSurveyToChat(chatId, survey);
+                            if (result != null) {
+                                result = result.replace("```json", "").replace("```", "").trim();
 
-                                JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
-                                aiTopicField.setText("");
-                                cardLayout.show(mainContainer, VIEW_DASHBOARD);
+                                try {
+                                    com.google.gson.Gson gson = new com.google.gson.Gson();
+                                    SurveyData survey = gson.fromJson(result, SurveyData.class);
 
-                            } catch (Exception ex) {
-                                JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה בפירוק הנתונים או בשליחה לטלגרם.", "שגיאה", JOptionPane.ERROR_MESSAGE);
-                                ex.printStackTrace();
+                                    String chatId = "6005182811";
+                                    bot.sendSurveyToChat(chatId, survey);
+
+                                    JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+                                    aiTopicField.setText("");
+                                    cardLayout.show(mainContainer, VIEW_DASHBOARD);
+
+                                } catch (Exception ex) {
+                                    JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה בפירוק הנתונים או בשליחה לטלגרם.", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                                    ex.printStackTrace();
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
                             }
-                        } else {
-                            JOptionPane.showMessageDialog(DashboardFrame.this, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        } finally {
+                            sendBtn.setEnabled(true);
+                            sendBtn.setText("שלח סקר");
                         }
-                        // ---> כאן מסתיים הבלוק שהחלפנו <---
+                    }
+                }.execute();
 
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    } finally {
-                        sendBtn.setEnabled(true);
-                        sendBtn.setText("שלח סקר");
+            } else {
+                String question = allManualFields.get(0).getText().trim();
+
+                if (question.isEmpty()) {
+                    JOptionPane.showMessageDialog(DashboardFrame.this, "נא להזין לפחות את השאלה הראשונה", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                java.util.List<String> answers = new java.util.ArrayList<>();
+                for (int i = 1; i <= 4; i++) {
+                    String ans = allManualFields.get(i).getText().trim();
+                    if (!ans.isEmpty()) {
+                        answers.add(ans);
                     }
                 }
-            }.execute();
+
+                if (answers.size() < 2) {
+                    JOptionPane.showMessageDialog(DashboardFrame.this, "סקר חייב להכיל לפחות 2 תשובות!", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                SurveyData manualSurvey = new SurveyData(question, answers);
+                String chatId = "6005182811";
+                bot.sendSurveyToChat(chatId, manualSurvey);
+
+                JOptionPane.showMessageDialog(DashboardFrame.this, "הסקר הידני נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+
+                for (JTextField field : allManualFields) {
+                    field.setText("");
+                }
+            }
         });
 
         bottomPanel.add(sendBtn);
@@ -298,6 +338,7 @@ public class DashboardFrame extends JFrame {
             rowPanel.add(label, BorderLayout.LINE_START);
 
             JTextField textField = new JTextField(30);
+            this.allManualFields.add(textField);
             textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 20));
             rowPanel.add(textField, BorderLayout.CENTER);
 
@@ -329,15 +370,5 @@ public class DashboardFrame extends JFrame {
             this.tableModel.addRow(rowData);
             this.totalMembersLabel.setText(this.MEMBERS_PREFIX + this.tableModel.getRowCount());
         });
-    }
-
-    private String getSecureToken(String keyName) {
-        java.util.Properties prop = new java.util.Properties();
-        try (java.io.FileInputStream input = new java.io.FileInputStream("config.properties")) {
-            prop.load(input);
-            return prop.getProperty(keyName);
-        } catch (Exception ex) {
-            return null;
-        }
     }
 }

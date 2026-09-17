@@ -5,19 +5,14 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MyBot extends TelegramLongPollingBot {
-    private List<CommunityUser> communityUsers;
+    private Map<Long, CommunityUser> communityUsers;
     private DashboardFrame dashboard;
 
     public MyBot(DashboardFrame dashboard) {
-        this.communityUsers = new ArrayList<>();
+        this.communityUsers = new HashMap<>();
         this.dashboard = dashboard;
     }
 
@@ -31,13 +26,14 @@ public class MyBot extends TelegramLongPollingBot {
 
             if (messageText.equals("היי") || messageText.equalsIgnoreCase("hi") || messageText.equals("/start")) {
 
-                if (!isUserExists(chatId)) {
+                if (!this.communityUsers.containsKey(chatId)) {
                     CommunityUser newUser = new CommunityUser(chatId, firstName, username);
-                    this.communityUsers.add(newUser);
+                    this.communityUsers.put(chatId, newUser);
+
                     this.dashboard.addUserToTable(newUser);
                     this.notifyOtherMembers(newUser);
                 } else {
-                    System.out.println("המשתמש כבר קיים בקהילה, ולכן לא יתווסף שוב.");
+                    System.out.println("המשתמש כבר קיים בקהילה.");
                 }
             }
         }
@@ -47,7 +43,7 @@ public class MyBot extends TelegramLongPollingBot {
         String text = "משתמש חדש הצטרף: " + newMember.getFirstName() + "\n" +
                 "גודל הקהילה העדכני: " + this.communityUsers.size() + " חברים.";
 
-        for (CommunityUser user : this.communityUsers) {
+        for (CommunityUser user : this.communityUsers.values()) {
             if (user.getChatId() != newMember.getChatId()) {
                 SendMessage message = new SendMessage();
                 message.setChatId(user.getChatId());
@@ -59,15 +55,6 @@ public class MyBot extends TelegramLongPollingBot {
                 }
             }
         }
-    }
-
-    private boolean isUserExists(long targetChatId) {
-        for (CommunityUser user : this.communityUsers) {
-            if (user.getChatId() == targetChatId) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void sendSurveyToChat(String chatId, SurveyData survey) {
@@ -88,18 +75,11 @@ public class MyBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "ShohamCodeBot";
+        return "SHOAM1_BOT";
     }
 
     @Override
     public String getBotToken() {
-        Properties prop = new Properties();
-        try (FileInputStream input = new FileInputStream("config.properties")) {
-            prop.load(input);
-            return prop.getProperty("BOT_TOKEN");
-        } catch (IOException ex) {
-            System.out.println("שגיאה בקריאת קובץ הטוקן: " + ex.getMessage());
-            return null;
-        }
+        return Utils.getSecureToken("BOT_TOKEN");
     }
 }
