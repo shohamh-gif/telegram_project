@@ -1,5 +1,6 @@
 package org.example;
 
+import lombok.Getter;
 import lombok.Setter;
 
 import javax.swing.*;
@@ -7,8 +8,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
-import java.util.ArrayList;
 import java.util.List;
 
 public class DashboardFrame extends JFrame {
@@ -16,11 +15,6 @@ public class DashboardFrame extends JFrame {
     private JPanel mainContainer;
     private DefaultTableModel tableModel;
     private JLabel totalMembersLabel;
-    private SurveyApiService apiService;
-    private JTextField aiTopicField;
-    private List<JTextField> allManualFields;
-    private JTextField delayField;
-    private JLabel countdownLabel;
 
     private JButton tabCommunityBtn;
     private JButton tabCreateBtn;
@@ -38,37 +32,35 @@ public class DashboardFrame extends JFrame {
     private JPanel resultsContentPanel;
     private List<ActiveSurveySession.QuestionResult> lastResults;
 
+    @Getter
     @Setter
     private MyBot bot;
 
-    private final String VIEW_DASHBOARD = "Dashboard";
-    private final String VIEW_SURVEY = "Survey";
-    private final String VIEW_LIVE_STATUS = "LiveStatus";
-    private final String VIEW_RESULTS = "Results";
-    private final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
-    private final String FONT_NAME = "Segoe UI";
+    // הקבועים הפכו לפומביים כדי שפאנלים אחרים ישתמשו בהם לעיצוב אחיד
+    public static final String VIEW_DASHBOARD = "Dashboard";
+    public static final String VIEW_SURVEY = "Survey";
+    public static final String VIEW_LIVE_STATUS = "LiveStatus";
+    public static final String VIEW_RESULTS = "Results";
+    public static final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
+    public static final String FONT_NAME = "Segoe UI";
 
-    private final Color BACKGROUND_PINK = new Color(253, 245, 247);
-    private final Color HEADER_PINK = new Color(250, 220, 228);
-    private final Color BUTTON_PINK = new Color(248, 190, 205);
-    private final Color DARK_TEXT = new Color(70, 65, 68);
-    private final Color BANNER_ROSE = new Color(224, 118, 151);
-    private final Color BANNER_ROSE_DARK = new Color(200, 95, 128);
-    private final Color TAB_BAR_BG = Color.WHITE;
-    private final Color TAB_TEXT_INACTIVE = new Color(150, 140, 143);
-    private final Color TAB_UNDERLINE_ACTIVE = new Color(214, 64, 110);
-
-    private final Color GREEN_DONE = new Color(76, 175, 100);
-    private final Color GREEN_ROW_BG = new Color(226, 247, 231);
-    private final Color ORANGE_PROGRESS = new Color(214, 140, 40);
-    private final Color YELLOW_ROW_BG = new Color(255, 246, 212);
-    private final Color GRAY_NOT_STARTED = new Color(160, 155, 158);
-    private final Color BLUE_ACCENT = new Color(66, 140, 224);
-    private final Color TRACK_GRAY = new Color(233, 230, 231);
+    public static final Color BACKGROUND_PINK = new Color(253, 245, 247);
+    public static final Color HEADER_PINK = new Color(250, 220, 228);
+    public static final Color BUTTON_PINK = new Color(248, 190, 205);
+    public static final Color DARK_TEXT = new Color(70, 65, 68);
+    public static final Color BANNER_ROSE = new Color(224, 118, 151);
+    public static final Color BANNER_ROSE_DARK = new Color(200, 95, 128);
+    public static final Color TAB_BAR_BG = Color.WHITE;
+    public static final Color TAB_TEXT_INACTIVE = new Color(150, 140, 143);
+    public static final Color TAB_UNDERLINE_ACTIVE = new Color(214, 64, 110);
+    public static final Color GREEN_DONE = new Color(76, 175, 100);
+    public static final Color GREEN_ROW_BG = new Color(226, 247, 231);
+    public static final Color YELLOW_ROW_BG = new Color(255, 246, 212);
+    public static final Color GRAY_NOT_STARTED = new Color(160, 155, 158);
+    public static final Color BLUE_ACCENT = new Color(66, 140, 224);
+    public static final Color TRACK_GRAY = new Color(233, 230, 231);
 
     public DashboardFrame() {
-        this.apiService = new SurveyApiService();
-        this.allManualFields = new ArrayList<>();
         this.setTitle("Telegram Survey Bot - לוח בקרה");
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize(screenSize.width, screenSize.height);
@@ -81,14 +73,17 @@ public class DashboardFrame extends JFrame {
 
         this.cardLayout = new CardLayout();
         this.mainContainer = new JPanel(this.cardLayout);
-        this.mainContainer.add(this.createDashboardPanel(), this.VIEW_DASHBOARD);
-        this.mainContainer.add(this.createSurveyPanel(), this.VIEW_SURVEY);
-        this.mainContainer.add(this.createLiveStatusPanel(), this.VIEW_LIVE_STATUS);
-        this.mainContainer.add(this.createResultsPanel(), this.VIEW_RESULTS);
+        this.mainContainer.add(this.createDashboardPanel(), VIEW_DASHBOARD);
+
+        // כאן משלבים את המחלקה החדשה שיצרנו!
+        this.mainContainer.add(new CreateSurveyPanel(this), VIEW_SURVEY);
+
+        this.mainContainer.add(this.createLiveStatusPanel(), VIEW_LIVE_STATUS);
+        this.mainContainer.add(this.createResultsPanel(), VIEW_RESULTS);
         root.add(this.mainContainer, BorderLayout.CENTER);
 
         this.setContentPane(root);
-        this.switchTab(this.VIEW_DASHBOARD);
+        this.switchTab(VIEW_DASHBOARD);
     }
 
     private JPanel createHeaderAndTabs() {
@@ -96,11 +91,11 @@ public class DashboardFrame extends JFrame {
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
 
         JPanel banner = new JPanel(new BorderLayout());
-        banner.setBackground(this.BANNER_ROSE);
+        banner.setBackground(BANNER_ROSE);
         banner.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
 
-        JLabel title = new JLabel("Telegram Survey Bot  —  לוח בקרה");
-        title.setFont(new Font(this.FONT_NAME, Font.BOLD, 20));
+        JLabel title = new JLabel("Telegram Survey Bot  -  לוח בקרה");
+        title.setFont(new Font(FONT_NAME, Font.BOLD, 20));
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
 
@@ -112,18 +107,18 @@ public class DashboardFrame extends JFrame {
         wrapper.add(banner);
 
         JPanel tabBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        tabBar.setBackground(this.TAB_BAR_BG);
-        tabBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, this.HEADER_PINK));
+        tabBar.setBackground(TAB_BAR_BG);
+        tabBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, HEADER_PINK));
 
         this.tabCommunityBtn = this.createTabButton("קהילה");
         this.tabCreateBtn = this.createTabButton("יצירת סקר");
         this.tabLiveBtn = this.createTabButton("סקר פעיל");
         this.tabResultsBtn = this.createTabButton("תוצאות");
 
-        this.tabCommunityBtn.addActionListener(e -> this.switchTab(this.VIEW_DASHBOARD));
-        this.tabCreateBtn.addActionListener(e -> this.switchTab(this.VIEW_SURVEY));
-        this.tabLiveBtn.addActionListener(e -> this.switchTab(this.VIEW_LIVE_STATUS));
-        this.tabResultsBtn.addActionListener(e -> this.switchTab(this.VIEW_RESULTS));
+        this.tabCommunityBtn.addActionListener(e -> this.switchTab(VIEW_DASHBOARD));
+        this.tabCreateBtn.addActionListener(e -> this.switchTab(VIEW_SURVEY));
+        this.tabLiveBtn.addActionListener(e -> this.switchTab(VIEW_LIVE_STATUS));
+        this.tabResultsBtn.addActionListener(e -> this.switchTab(VIEW_RESULTS));
 
         tabBar.add(this.tabCommunityBtn);
         tabBar.add(this.tabCreateBtn);
@@ -136,9 +131,9 @@ public class DashboardFrame extends JFrame {
 
     private JButton createTabButton(String text) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
-        btn.setForeground(this.TAB_TEXT_INACTIVE);
-        btn.setBackground(this.TAB_BAR_BG);
+        btn.setFont(new Font(FONT_NAME, Font.BOLD, 14));
+        btn.setForeground(TAB_TEXT_INACTIVE);
+        btn.setBackground(TAB_BAR_BG);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
@@ -146,23 +141,23 @@ public class DashboardFrame extends JFrame {
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(14, 22, 11, 22),
-                BorderFactory.createMatteBorder(0, 0, 3, 0, this.TAB_BAR_BG)
+                BorderFactory.createMatteBorder(0, 0, 3, 0, TAB_BAR_BG)
         ));
         return btn;
     }
 
-    private void switchTab(String viewKey) {
+    public void switchTab(String viewKey) {
         this.activeTab = viewKey;
         this.cardLayout.show(this.mainContainer, viewKey);
-        this.styleTab(this.tabCommunityBtn, this.VIEW_DASHBOARD.equals(viewKey));
-        this.styleTab(this.tabCreateBtn, this.VIEW_SURVEY.equals(viewKey));
-        this.styleTab(this.tabLiveBtn, this.VIEW_LIVE_STATUS.equals(viewKey));
-        this.styleTab(this.tabResultsBtn, this.VIEW_RESULTS.equals(viewKey));
+        this.styleTab(this.tabCommunityBtn, VIEW_DASHBOARD.equals(viewKey));
+        this.styleTab(this.tabCreateBtn, VIEW_SURVEY.equals(viewKey));
+        this.styleTab(this.tabLiveBtn, VIEW_LIVE_STATUS.equals(viewKey));
+        this.styleTab(this.tabResultsBtn, VIEW_RESULTS.equals(viewKey));
     }
 
     private void styleTab(JButton tab, boolean active) {
-        tab.setForeground(active ? this.BANNER_ROSE_DARK : this.TAB_TEXT_INACTIVE);
-        Color underline = active ? this.TAB_UNDERLINE_ACTIVE : this.TAB_BAR_BG;
+        tab.setForeground(active ? BANNER_ROSE_DARK : TAB_TEXT_INACTIVE);
+        Color underline = active ? TAB_UNDERLINE_ACTIVE : TAB_BAR_BG;
         tab.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(14, 22, 11, 22),
                 BorderFactory.createMatteBorder(0, 0, 3, 0, underline)
@@ -170,51 +165,49 @@ public class DashboardFrame extends JFrame {
     }
 
     private void styleTable(JTable table) {
-        table.setRowHeight(48); // שורות גבוהות ומרווחות יותר
-        table.setFont(new Font(this.FONT_NAME, Font.PLAIN, 15));
-        table.setForeground(this.DARK_TEXT);
-        table.setSelectionBackground(new Color(250, 240, 243)); // ורוד חיוור מאוד בבחירה
-        table.setSelectionForeground(this.DARK_TEXT);
+        table.setRowHeight(48);
+        table.setFont(new Font(FONT_NAME, Font.PLAIN, 15));
+        table.setForeground(DARK_TEXT);
+        table.setSelectionBackground(new Color(250, 240, 243));
+        table.setSelectionForeground(DARK_TEXT);
         table.setShowHorizontalLines(true);
-        table.setShowVerticalLines(false); // מעלים קווים אנכיים למראה מודרני
-        table.setGridColor(new Color(240, 240, 240)); // אפור בהיר ועדין
+        table.setShowVerticalLines(false);
+        table.setGridColor(new Color(240, 240, 240));
         table.setBackground(Color.WHITE);
 
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font(this.FONT_NAME, Font.BOLD, 15));
+        header.setFont(new Font(FONT_NAME, Font.BOLD, 15));
         header.setBackground(Color.WHITE);
-        header.setForeground(this.BANNER_ROSE_DARK);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, this.HEADER_PINK)); // קו תחתון מודגש
+        header.setForeground(BANNER_ROSE_DARK);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, HEADER_PINK));
         header.setPreferredSize(new Dimension(100, 45));
         header.setReorderingAllowed(false);
     }
 
     private JPanel createDashboardPanel() {
         JPanel panel = new JPanel(new BorderLayout(20, 20));
-        panel.setBackground(this.BACKGROUND_PINK);
+        panel.setBackground(BACKGROUND_PINK);
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
-        // מעטפת "כרטיס" לבנה לכל תוכן הקהילה
         JPanel cardPanel = new JPanel(new BorderLayout(0, 15));
         cardPanel.setBackground(Color.WHITE);
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(HEADER_PINK, 1, true),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        this.totalMembersLabel = new JLabel(this.MEMBERS_PREFIX + "0");
-        this.totalMembersLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 18));
-        this.totalMembersLabel.setForeground(this.DARK_TEXT);
+        this.totalMembersLabel = new JLabel(MEMBERS_PREFIX + "0");
+        this.totalMembersLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
+        this.totalMembersLabel.setForeground(DARK_TEXT);
 
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(Color.WHITE); // רקע לבן בתוך הכרטיס
+        topPanel.setBackground(Color.WHITE);
         topPanel.add(this.totalMembersLabel, BorderLayout.EAST);
 
         cardPanel.add(topPanel, BorderLayout.NORTH);
 
-        // יצירת הטבלה ללא הגבול הכפול (כי יש גבול לכרטיס)
         JScrollPane tableScroll = this.createTablePanel();
-        tableScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, this.HEADER_PINK));
+        tableScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, HEADER_PINK));
         cardPanel.add(tableScroll, BorderLayout.CENTER);
 
         panel.add(cardPanel, BorderLayout.CENTER);
@@ -226,7 +219,7 @@ public class DashboardFrame extends JFrame {
         this.tableModel = new NonEditableTableModel(columnNames, 0);
 
         JTable usersTable = new JTable(this.tableModel);
-        this.styleTable(usersTable); // הפעלת העיצוב החדש!
+        this.styleTable(usersTable);
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -236,359 +229,8 @@ public class DashboardFrame extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(usersTable);
         scrollPane.getViewport().setBackground(Color.WHITE);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // הורדנו את המסגרת המיושנת
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         return scrollPane;
-    }
-
-    private JPanel createSurveyPanel() {
-        // צמצום הרווחים החיצוניים כדי לתת לטופס עוד גובה להימתח אליו
-        JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBackground(this.BACKGROUND_PINK);
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-
-        JPanel cardPanel = new JPanel(new BorderLayout(5, 5));
-        cardPanel.setBackground(Color.WHITE);
-        cardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1, true),
-                BorderFactory.createEmptyBorder(10, 25, 10, 25) // שוליים עליונים/תחתונים קטנים יותר
-        ));
-
-        JLabel titleLabel = new JLabel("הגדרות סקר חדש", SwingConstants.CENTER);
-        titleLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 20));
-        titleLabel.setForeground(this.BANNER_ROSE_DARK);
-        cardPanel.add(titleLabel, BorderLayout.NORTH);
-
-        JPanel formPanel = new JPanel(new BorderLayout(5, 5));
-        formPanel.setBackground(Color.WHITE);
-
-        CardLayout inputCardLayout = new CardLayout();
-        JPanel inputContainer = new JPanel(inputCardLayout);
-        inputContainer.setBackground(Color.WHITE);
-
-        inputContainer.add(this.createManualPanel(), "Manual");
-        inputContainer.add(this.createAIPanel(), "AI");
-
-        formPanel.add(this.createRadioPanel(inputCardLayout, inputContainer), BorderLayout.NORTH);
-        formPanel.add(inputContainer, BorderLayout.CENTER);
-
-        formPanel.add(this.createDelayAndSendPanel(), BorderLayout.SOUTH);
-
-        cardPanel.add(formPanel, BorderLayout.CENTER);
-        panel.add(cardPanel, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JPanel createDelayAndSendPanel() {
-        JPanel delayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 5));
-        delayPanel.setBackground(Color.WHITE);
-        delayPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        JLabel label = new JLabel("השהיה לפני שליחה (בדקות, 0 למיידי):");
-        label.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
-        delayPanel.add(label);
-
-        this.delayField = new JTextField("0", 4);
-        this.delayField.setHorizontalAlignment(JTextField.CENTER);
-        this.delayField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1),
-                BorderFactory.createEmptyBorder(4, 4, 4, 4)
-        ));
-        delayPanel.add(this.delayField);
-
-        // יצירת כפתור השליחה קומפקטי יותר באותה שורה
-        JButton sendBtn = this.createStyledButton("שלח סקר");
-        sendBtn.setPreferredSize(new Dimension(130, 32));
-
-        sendBtn.addActionListener(e -> {
-            if (this.bot.getCommunityUsers().size() < 3) {
-                JOptionPane.showMessageDialog(this, "לא ניתן להתחיל סקר. נדרשים לפחות 3 חברים בקהילה!", "חסימה", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (this.bot.isSurveyActive()) {
-                JOptionPane.showMessageDialog(this, "יש סקר פעיל (או בהשהיה) כרגע! חובה להמתין לסיומו.", "חסימה", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            int delayMinutes;
-            try {
-                delayMinutes = Integer.parseInt(this.delayField.getText().trim());
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "נא להזין מספר דקות תקין!", "שגיאה", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if (delayMinutes > 0) {
-                startCountdown(delayMinutes, sendBtn);
-            } else {
-                executeSurveyDispatch(sendBtn);
-            }
-        });
-        delayPanel.add(sendBtn);
-
-        this.countdownLabel = new JLabel("");
-        this.countdownLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 15));
-        this.countdownLabel.setForeground(this.BANNER_ROSE_DARK);
-        delayPanel.add(this.countdownLabel);
-
-        return delayPanel;
-    }
-
-    private JPanel createRadioPanel(CardLayout inputCardLayout, JPanel inputContainer) {
-        JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        radioPanel.setBackground(Color.WHITE); // רקע נקי
-        radioPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        JRadioButton manualRadio = new JRadioButton("יצירה ידנית");
-        JRadioButton aiRadio = new JRadioButton("ChatGPT (אוטומטי)");
-
-        manualRadio.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
-        aiRadio.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
-        manualRadio.setBackground(Color.WHITE);
-        aiRadio.setBackground(Color.WHITE);
-        manualRadio.setForeground(this.DARK_TEXT);
-        aiRadio.setForeground(this.DARK_TEXT);
-        manualRadio.setSelected(true);
-
-        ButtonGroup group = new ButtonGroup();
-        group.add(manualRadio);
-        group.add(aiRadio);
-        radioPanel.add(manualRadio);
-        radioPanel.add(aiRadio);
-
-        manualRadio.addActionListener(e -> inputCardLayout.show(inputContainer, "Manual"));
-        aiRadio.addActionListener(e -> inputCardLayout.show(inputContainer, "AI"));
-        return radioPanel;
-    }
-
-    private JPanel createManualPanel() {
-        JPanel manualQuestionsContainer = new JPanel(new BorderLayout());
-        manualQuestionsContainer.setBackground(Color.WHITE);
-
-        JPanel listPanel = new JPanel();
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(Color.WHITE);
-
-        listPanel.add(this.createQuestionBlock(1));
-        // המרווח הקסום: דוחף את השאלה הבאה למטה בצורה מבוקרת
-        listPanel.add(Box.createVerticalStrut(15));
-
-        listPanel.add(this.createQuestionBlock(2));
-        // המרווח הקסום 2
-        listPanel.add(Box.createVerticalStrut(15));
-
-        listPanel.add(this.createQuestionBlock(3));
-
-        manualQuestionsContainer.add(listPanel, BorderLayout.NORTH);
-        return manualQuestionsContainer;
-    }
-
-    private JPanel createAIPanel() {
-        JPanel aiPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        aiPanel.setBackground(Color.WHITE);
-        aiPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        JLabel label = new JLabel("הזן נושא לסקר:");
-        label.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
-        aiPanel.add(label);
-
-        this.aiTopicField = new JTextField(30);
-
-        // הגדרת עברית גם עבור יצירת סקר AI
-        this.aiTopicField.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        this.aiTopicField.setHorizontalAlignment(JTextField.RIGHT);
-
-        this.aiTopicField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
-        this.aiTopicField.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
-        aiPanel.add(this.aiTopicField);
-        return aiPanel;
-    }
-
-    private JPanel createDelayPanel() {
-        JPanel delayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        delayPanel.setBackground(Color.WHITE);
-        delayPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        JLabel label = new JLabel("השהיה לפני שליחה (בדקות, 0 למיידי):");
-        label.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
-        delayPanel.add(label);
-
-        this.delayField = new JTextField("0", 5);
-        this.delayField.setHorizontalAlignment(JTextField.CENTER);
-        this.delayField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1),
-                BorderFactory.createEmptyBorder(4, 4, 4, 4)
-        ));
-        delayPanel.add(this.delayField);
-
-        this.countdownLabel = new JLabel("");
-        this.countdownLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 16));
-        this.countdownLabel.setForeground(this.BANNER_ROSE_DARK);
-        delayPanel.add(this.countdownLabel);
-        return delayPanel;
-    }
-
-    private void executeSurveyDispatch(JButton sendBtn) {
-        if (this.aiTopicField.isShowing()) {
-            handleAISurvey(sendBtn);
-        } else {
-            handleManualSurvey();
-        }
-    }
-
-    private void startCountdown(int minutes, JButton sendBtn) {
-        this.bot.setSurveyActive(true);
-        sendBtn.setEnabled(false);
-
-        int totalSeconds = minutes * 60;
-        int[] timeLeft = {totalSeconds};
-
-        Timer timer = new Timer(1000, null);
-        timer.addActionListener(e -> {
-            if (timeLeft[0] > 0) {
-                int mins = timeLeft[0] / 60;
-                int secs = timeLeft[0] % 60;
-                this.countdownLabel.setText(String.format("הסקר יישלח בעוד: %02d:%02d", mins, secs));
-                timeLeft[0]--;
-            } else {
-                ((Timer) e.getSource()).stop();
-                this.countdownLabel.setText("✓ הסקר נשלח!");
-                executeSurveyDispatch(sendBtn);
-            }
-        });
-        timer.start();
-    }
-
-    private void handleAISurvey(JButton sendBtn) {
-        String topic = this.aiTopicField.getText().trim();
-        if (topic.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        this.bot.setSurveyActive(true);
-        sendBtn.setEnabled(false);
-        sendBtn.setText("מייצר סקר...");
-        new AiSurveyTask(topic, this.apiService, this.bot, this, sendBtn).execute();
-    }
-
-    public void onAiSurveySuccess() {
-        this.aiTopicField.setText("");
-        this.countdownLabel.setText("");
-    }
-
-    private void handleManualSurvey() {
-        List<SurveyData> surveyQuestions = new ArrayList<>();
-
-        for (int block = 0; block < 3; block++) {
-            int offset = block * 5;
-            String question = this.allManualFields.get(offset).getText().trim();
-
-            if (question.isEmpty()) {
-                if (block == 0) {
-                    JOptionPane.showMessageDialog(this, "נא להזין לפחות את השאלה הראשונה", "שגיאה", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                continue;
-            }
-
-            List<String> answers = new ArrayList<>();
-            for (int i = 1; i <= 4; i++) {
-                String ans = this.allManualFields.get(offset + i).getText().trim();
-                if (!ans.isEmpty()) {
-                    answers.add(ans);
-                }
-            }
-
-            if (answers.size() < 2) {
-                JOptionPane.showMessageDialog(this, "שאלה " + (block + 1) + " חייבת להכיל לפחות 2 תשובות!", "שגיאה", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            surveyQuestions.add(new SurveyData(question, answers));
-        }
-
-        this.bot.startSurvey(surveyQuestions);
-
-        JOptionPane.showMessageDialog(this, "הסקר הידני נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
-
-        for (JTextField field : this.allManualFields) {
-            field.setText("");
-        }
-        this.countdownLabel.setText("");
-    }
-
-    private JPanel createQuestionBlock(int qNum) {
-        // הגדלנו טיפ-טיפה את הרווח בין השורות של אותה שאלה מ-2 ל-4 כדי שלא יהיה חנוק
-        JPanel panel = new JPanel(new GridLayout(5, 1, 0, 4));
-        panel.setBackground(Color.WHITE);
-        panel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-        String optionalText = (qNum > 1) ? " (אופציונלי):" : ":";
-        String[] labels = {
-                "שאלה " + qNum + optionalText,
-                "תשובה 1:",
-                "תשובה 2:",
-                "תשובה 3 (אופציונלי):",
-                "תשובה 4 (אופציונלי):"
-        };
-
-        for (int i = 0; i < labels.length; i++) {
-            JPanel rowPanel = new JPanel(new BorderLayout(10, 0));
-            rowPanel.setBackground(Color.WHITE);
-            rowPanel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-
-            JLabel label = new JLabel(labels[i]);
-            if (i == 0) {
-                label.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
-                label.setForeground(this.BANNER_ROSE_DARK);
-            } else {
-                label.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
-                label.setForeground(this.DARK_TEXT);
-            }
-            label.setPreferredSize(new Dimension(140, 20));
-            rowPanel.add(label, BorderLayout.LINE_START);
-
-            JTextField textField = new JTextField();
-
-            textField.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-            textField.setHorizontalAlignment(JTextField.RIGHT);
-
-            textField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(this.HEADER_PINK, 1, true),
-                    BorderFactory.createEmptyBorder(3, 8, 3, 8) // קצת יותר בשר לשדה
-            ));
-            textField.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
-
-            this.allManualFields.add(textField);
-            rowPanel.add(textField, BorderLayout.CENTER);
-
-            panel.add(rowPanel);
-        }
-
-        if (qNum < 3) {
-            panel.setBorder(BorderFactory.createCompoundBorder(
-                    // 10 פיקסלים של אוויר נקי מתחת לתשובה 4, ואז הקו המפריד
-                    BorderFactory.createEmptyBorder(0, 0, 10, 0),
-                    BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(235, 235, 235))
-            ));
-        } else {
-            panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-        }
-        return panel;
-    }
-
-    private JButton createStyledButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font(this.FONT_NAME, Font.BOLD, 14));
-        btn.setBackground(this.BUTTON_PINK);
-        btn.setForeground(this.DARK_TEXT);
-        btn.setPreferredSize(new Dimension(170, 40));
-        btn.setFocusPainted(false);
-        return btn;
     }
 
     public void addUserToTable(CommunityUser user) {
@@ -596,25 +238,25 @@ public class DashboardFrame extends JFrame {
             String username = user.getTelegramUsername() != null ? "@" + user.getTelegramUsername() : "-";
             Object[] rowData = {user.getFormattedJoinTime(), username, user.getFirstName()};
             this.tableModel.addRow(rowData);
-            this.totalMembersLabel.setText(this.MEMBERS_PREFIX + this.tableModel.getRowCount());
+            this.totalMembersLabel.setText(MEMBERS_PREFIX + this.tableModel.getRowCount());
         });
     }
 
     private JPanel createLiveStatusPanel() {
         JPanel panel = new JPanel(new BorderLayout(18, 18));
-        panel.setBackground(this.BACKGROUND_PINK);
+        panel.setBackground(BACKGROUND_PINK);
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         this.liveTitleLabel = new JLabel("אין סקר פעיל כרגע", SwingConstants.CENTER);
-        this.liveTitleLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 24));
-        this.liveTitleLabel.setForeground(this.BANNER_ROSE_DARK);
+        this.liveTitleLabel.setFont(new Font(FONT_NAME, Font.BOLD, 24));
+        this.liveTitleLabel.setForeground(BANNER_ROSE_DARK);
         panel.add(this.liveTitleLabel, BorderLayout.NORTH);
 
         JPanel centerStack = new JPanel(new BorderLayout(14, 14));
-        centerStack.setBackground(this.BACKGROUND_PINK);
+        centerStack.setBackground(BACKGROUND_PINK);
 
         JPanel cardsRow = new JPanel(new GridLayout(1, 3, 15, 0));
-        cardsRow.setBackground(this.BACKGROUND_PINK);
+        cardsRow.setBackground(BACKGROUND_PINK);
 
         this.liveParticipantsValue = new JLabel("0", SwingConstants.CENTER);
         this.liveCompletedValue = new JLabel("0", SwingConstants.CENTER);
@@ -625,10 +267,10 @@ public class DashboardFrame extends JFrame {
         cardsRow.add(this.createStatCard(this.liveRemainingValue, "טרם סיימו"));
 
         this.liveTimeLeftLabel = new JLabel("זמן שנותר: 05:00", SwingConstants.CENTER);
-        this.liveTimeLeftLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 18));
+        this.liveTimeLeftLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
         this.liveTimeLeftLabel.setForeground(Color.WHITE);
         this.liveTimeLeftLabel.setOpaque(true);
-        this.liveTimeLeftLabel.setBackground(this.BANNER_ROSE);
+        this.liveTimeLeftLabel.setBackground(BANNER_ROSE);
         this.liveTimeLeftLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         this.liveTimeLeftLabel.setVisible(false);
@@ -640,9 +282,8 @@ public class DashboardFrame extends JFrame {
         this.liveStatusTableModel = new NonEditableTableModel(columnNames, 0);
         JTable liveTable = new JTable(this.liveStatusTableModel);
 
-        this.styleTable(liveTable); // הפעלת העיצוב החדש גם פה!
+        this.styleTable(liveTable);
 
-        // שימוש במחלקה החיצונית שיצרנו כדי לצבוע ולמרכז את השורות
         StatusRowRenderer statusRenderer = new StatusRowRenderer();
         for (int i = 0; i < liveTable.getColumnCount(); i++) {
             liveTable.getColumnModel().getColumn(i).setCellRenderer(statusRenderer);
@@ -650,7 +291,7 @@ public class DashboardFrame extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(liveTable);
         scrollPane.getViewport().setBackground(Color.WHITE);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // מסגרת נקייה
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         centerStack.add(scrollPane, BorderLayout.CENTER);
         panel.add(centerStack, BorderLayout.CENTER);
@@ -662,17 +303,17 @@ public class DashboardFrame extends JFrame {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(HEADER_PINK, 1, true),
                 BorderFactory.createEmptyBorder(16, 10, 16, 10)
         ));
 
-        valueLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 30));
-        valueLabel.setForeground(this.BANNER_ROSE_DARK);
+        valueLabel.setFont(new Font(FONT_NAME, Font.BOLD, 30));
+        valueLabel.setForeground(BANNER_ROSE_DARK);
         valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel captionLabel = new JLabel(caption, SwingConstants.CENTER);
-        captionLabel.setFont(new Font(this.FONT_NAME, Font.PLAIN, 14));
-        captionLabel.setForeground(this.DARK_TEXT);
+        captionLabel.setFont(new Font(FONT_NAME, Font.PLAIN, 14));
+        captionLabel.setForeground(DARK_TEXT);
         captionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         card.add(valueLabel);
@@ -684,9 +325,8 @@ public class DashboardFrame extends JFrame {
     public void onSurveyStarted(ActiveSurveySession session) {
         SwingUtilities.invokeLater(() -> {
             this.liveTitleLabel.setText("● סקר פעיל");
-            // מציגים את הבר ברגע שהסקר מתחיל
             this.liveTimeLeftLabel.setVisible(true);
-            this.switchTab(this.VIEW_LIVE_STATUS);
+            this.switchTab(VIEW_LIVE_STATUS);
         });
     }
 
@@ -722,16 +362,22 @@ public class DashboardFrame extends JFrame {
 
     private JPanel createResultsPanel() {
         JPanel outer = new JPanel(new BorderLayout());
-        outer.setBackground(this.BACKGROUND_PINK);
+        outer.setBackground(BACKGROUND_PINK);
         outer.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         this.resultsContentPanel = new JPanel();
         this.resultsContentPanel.setLayout(new BoxLayout(this.resultsContentPanel, BoxLayout.Y_AXIS));
-        this.resultsContentPanel.setBackground(this.BACKGROUND_PINK);
+        this.resultsContentPanel.setBackground(BACKGROUND_PINK);
 
         JScrollPane scrollPane = new JScrollPane(this.resultsContentPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        // --- החלת העיצוב המודרני מהמחלקה החיצונית ---
+        scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0)); // פס דק ואלגנטי
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 0)); // העלמת פס אופקי
+
         outer.add(scrollPane, BorderLayout.CENTER);
 
         this.renderEmptyResults();
@@ -741,8 +387,8 @@ public class DashboardFrame extends JFrame {
     private void renderEmptyResults() {
         this.resultsContentPanel.removeAll();
         JLabel emptyLabel = new JLabel("אין תוצאות להצגה עדיין - סקר טרם הסתיים", SwingConstants.CENTER);
-        emptyLabel.setFont(new Font(this.FONT_NAME, Font.PLAIN, 16));
-        emptyLabel.setForeground(this.TAB_TEXT_INACTIVE);
+        emptyLabel.setFont(new Font(FONT_NAME, Font.PLAIN, 16));
+        emptyLabel.setForeground(TAB_TEXT_INACTIVE);
         emptyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         emptyLabel.setBorder(BorderFactory.createEmptyBorder(60, 0, 0, 0));
         this.resultsContentPanel.add(emptyLabel);
@@ -754,15 +400,13 @@ public class DashboardFrame extends JFrame {
         SwingUtilities.invokeLater(() -> {
             this.lastResults = results;
             this.liveTitleLabel.setText("אין סקר פעיל כרגע");
-
-            // מסתירים את הבר ברגע שהסקר נגמר
             this.liveTimeLeftLabel.setVisible(false);
 
             this.resultsContentPanel.removeAll();
 
-            JLabel header = new JLabel("✓ הסקר נסגר - הנה התוצאות", SwingConstants.CENTER);
-            header.setFont(new Font(this.FONT_NAME, Font.BOLD, 22));
-            header.setForeground(this.DARK_TEXT);
+            JLabel header = new JLabel("הסקר נסגר - הנה התוצאות", SwingConstants.CENTER);
+            header.setFont(new Font(FONT_NAME, Font.BOLD, 22));
+            header.setForeground(DARK_TEXT);
             header.setAlignmentX(Component.CENTER_ALIGNMENT);
             this.resultsContentPanel.add(header);
             this.resultsContentPanel.add(Box.createVerticalStrut(18));
@@ -778,7 +422,7 @@ public class DashboardFrame extends JFrame {
 
             this.resultsContentPanel.revalidate();
             this.resultsContentPanel.repaint();
-            this.switchTab(this.VIEW_RESULTS);
+            this.switchTab(VIEW_RESULTS);
         });
     }
 
@@ -787,15 +431,15 @@ public class DashboardFrame extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(this.HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(HEADER_PINK, 1, true),
                 BorderFactory.createEmptyBorder(16, 18, 16, 18)
         ));
         panel.setMaximumSize(new Dimension(760, 400));
         panel.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
         JLabel qLabel = new JLabel("שאלה " + qNum + ": " + qr.question);
-        qLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 17));
-        qLabel.setForeground(this.DARK_TEXT);
+        qLabel.setFont(new Font(FONT_NAME, Font.BOLD, 17));
+        qLabel.setForeground(DARK_TEXT);
         qLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
         panel.add(qLabel);
         panel.add(Box.createVerticalStrut(12));
@@ -804,11 +448,11 @@ public class DashboardFrame extends JFrame {
         for (ActiveSurveySession.AnswerResult ar : qr.answers) {
             Color fillColor;
             if (ar.votes == 0) {
-                fillColor = this.GRAY_NOT_STARTED;
+                fillColor = GRAY_NOT_STARTED;
             } else if (rank == 0) {
-                fillColor = this.GREEN_DONE;
+                fillColor = GREEN_DONE;
             } else {
-                fillColor = this.BLUE_ACCENT;
+                fillColor = BLUE_ACCENT;
             }
 
             JPanel row = new JPanel(new BorderLayout(12, 0));
@@ -818,12 +462,13 @@ public class DashboardFrame extends JFrame {
             row.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
             JLabel answerLabel = new JLabel(ar.text);
-            answerLabel.setFont(new Font(this.FONT_NAME, Font.BOLD, 13));
-            answerLabel.setForeground(this.DARK_TEXT);
+            answerLabel.setFont(new Font(FONT_NAME, Font.BOLD, 13));
+            answerLabel.setForeground(DARK_TEXT);
             answerLabel.setPreferredSize(new Dimension(150, 26));
+            answerLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
             String barText = String.format("%.0f%%  (%d)", ar.percentage, ar.votes);
-            PercentBarPanel bar = new PercentBarPanel(ar.percentage, barText, fillColor, this.TRACK_GRAY, this.FONT_NAME);
+            PercentBarPanel bar = new PercentBarPanel(ar.percentage, barText, fillColor, TRACK_GRAY, FONT_NAME);
             bar.setPreferredSize(new Dimension(400, 30));
 
             row.add(answerLabel, BorderLayout.EAST);
@@ -832,58 +477,6 @@ public class DashboardFrame extends JFrame {
             panel.add(Box.createVerticalStrut(6));
             rank++;
         }
-
         return panel;
-    }
-
-    private static class PercentBarPanel extends JPanel {
-        private final double percentage;
-        private final String text;
-        private final Color fillColor;
-        private final Color trackColor;
-        private final String fontName;
-
-        PercentBarPanel(double percentage, String text, Color fillColor, Color trackColor, String fontName) {
-            this.percentage = percentage;
-            this.text = text;
-            this.fillColor = fillColor;
-            this.trackColor = trackColor;
-            this.fontName = fontName;
-            setOpaque(false);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int w = getWidth();
-            int h = getHeight();
-            int arc = h;
-
-            g2.setColor(this.trackColor);
-            g2.fill(new RoundRectangle2D.Double(0, 0, w, h, arc, arc));
-
-            int fillWidth = (int) Math.round(w * Math.min(100, Math.max(0, this.percentage)) / 100.0);
-            if (fillWidth > 0) {
-                g2.setColor(this.fillColor);
-                int drawWidth = Math.max(fillWidth, h); // כדי שהפינות המעוגלות ייראו תקין גם באחוז נמוך
-                drawWidth = Math.min(drawWidth, w);
-                g2.fill(new RoundRectangle2D.Double(0, 0, drawWidth, h, arc, arc));
-            }
-
-            g2.setFont(new Font(this.fontName, Font.BOLD, 13));
-            FontMetrics fm = g2.getFontMetrics();
-            int textWidth = fm.stringWidth(this.text);
-            int textX = (w - textWidth) / 2;
-            int textY = (h + fm.getAscent() - fm.getDescent()) / 2;
-
-            boolean textOverFill = (w / 2) < fillWidth;
-            g2.setColor(textOverFill ? Color.WHITE : new Color(90, 85, 88));
-            g2.drawString(this.text, textX, textY);
-
-            g2.dispose();
-        }
     }
 }

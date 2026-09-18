@@ -28,6 +28,15 @@ public class MyBot extends TelegramLongPollingBot {
         this.communityUsers = new HashMap<>();
         this.dashboard = dashboard;
         this.isSurveyActive = false;
+
+        CommunityUser fakeUser1 = new CommunityUser(111111111L, "משה דמה", "moshe_fake");
+        CommunityUser fakeUser2 = new CommunityUser(222222222L, "דנה טסט", "dana_test");
+
+        this.communityUsers.put(fakeUser1.getChatId(), fakeUser1);
+        this.communityUsers.put(fakeUser2.getChatId(), fakeUser2);
+
+        this.dashboard.addUserToTable(fakeUser1);
+        this.dashboard.addUserToTable(fakeUser2);
     }
 
     @Override
@@ -80,11 +89,6 @@ public class MyBot extends TelegramLongPollingBot {
         }
     }
 
-    /**
-     * נקודת הכניסה המרכזית להתחלת סקר: יוצרת סשן חדש (תמונת מצב של הקהילה כרגע),
-     * שולחת את כל השאלות לכל המשתתפים, ומעדכנת את ה-Swing שסקר התחיל.
-     * זו הפונקציה שצריך לקרוא לה מה-Dashboard (ולא ל-sendSurveyToChat ישירות בלולאה).
-     */
     public void startSurvey(List<SurveyData> questions) {
         this.currentSession = new ActiveSurveySession(this.communityUsers, questions.size(), this, this.dashboard);
         this.isSurveyActive = true;
@@ -101,7 +105,6 @@ public class MyBot extends TelegramLongPollingBot {
         }, "survey-dispatch-thread").start();
     }
 
-    /** שולחת שאלה בודדת כסקר Telegram לא-אנונימי ורושמת את ה-poll_id שהתקבל בסשן הפעיל */
     private void sendSurveyToChat(String chatId, SurveyData survey) {
         SendPoll sendPoll = new SendPoll();
         sendPoll.setChatId(chatId);
