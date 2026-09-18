@@ -19,19 +19,19 @@ public class CreateSurveyPanel extends JPanel {
         this.allManualFields = new ArrayList<>();
 
         this.setLayout(new BorderLayout(5, 5));
-        this.setBackground(DashboardFrame.BACKGROUND_PINK);
+        this.setBackground(DashboardFrame.MAIN_BG_COLOR);
         this.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 
         JPanel cardPanel = new JPanel(new BorderLayout(5, 5));
         cardPanel.setBackground(Color.WHITE);
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DashboardFrame.HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(DashboardFrame.BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(10, 25, 10, 25)
         ));
 
         JLabel titleLabel = new JLabel("הגדרות סקר חדש", SwingConstants.CENTER);
         titleLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 20));
-        titleLabel.setForeground(DashboardFrame.BANNER_ROSE_DARK);
+        titleLabel.setForeground(DashboardFrame.ACCENT_COLOR);
         cardPanel.add(titleLabel, BorderLayout.NORTH);
 
         JPanel formPanel = new JPanel(new BorderLayout(5, 5));
@@ -65,7 +65,7 @@ public class CreateSurveyPanel extends JPanel {
         this.delayField = new JTextField("0", 4);
         this.delayField.setHorizontalAlignment(JTextField.CENTER);
         this.delayField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DashboardFrame.HEADER_PINK, 1),
+                BorderFactory.createLineBorder(DashboardFrame.BORDER_COLOR, 1),
                 BorderFactory.createEmptyBorder(4, 4, 4, 4)
         ));
         delayPanel.add(this.delayField);
@@ -104,7 +104,7 @@ public class CreateSurveyPanel extends JPanel {
 
         this.countdownLabel = new JLabel("");
         this.countdownLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 15));
-        this.countdownLabel.setForeground(DashboardFrame.BANNER_ROSE_DARK);
+        this.countdownLabel.setForeground(DashboardFrame.ACCENT_COLOR);
         delayPanel.add(this.countdownLabel);
 
         return delayPanel;
@@ -169,7 +169,7 @@ public class CreateSurveyPanel extends JPanel {
         this.aiTopicField.setHorizontalAlignment(JTextField.RIGHT);
 
         this.aiTopicField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DashboardFrame.HEADER_PINK, 1),
+                BorderFactory.createLineBorder(DashboardFrame.BORDER_COLOR, 1),
                 BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
         this.aiTopicField.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
@@ -291,7 +291,7 @@ public class CreateSurveyPanel extends JPanel {
             JLabel label = new JLabel(labels[i]);
             if (i == 0) {
                 label.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 14));
-                label.setForeground(DashboardFrame.BANNER_ROSE_DARK);
+                label.setForeground(DashboardFrame.ACCENT_COLOR);
             } else {
                 label.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
                 label.setForeground(DashboardFrame.DARK_TEXT);
@@ -304,7 +304,7 @@ public class CreateSurveyPanel extends JPanel {
             textField.setHorizontalAlignment(JTextField.RIGHT);
 
             textField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(DashboardFrame.HEADER_PINK, 1, true),
+                    BorderFactory.createLineBorder(DashboardFrame.BORDER_COLOR, 1, true),
                     BorderFactory.createEmptyBorder(3, 8, 3, 8)
             ));
             textField.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
@@ -329,7 +329,7 @@ public class CreateSurveyPanel extends JPanel {
     private JButton createStyledButton(String text) {
         JButton btn = new JButton(text);
         btn.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 14));
-        btn.setBackground(DashboardFrame.BUTTON_PINK);
+        btn.setBackground(DashboardFrame.BUTTON_COLOR);
         btn.setForeground(DashboardFrame.DARK_TEXT);
         btn.setPreferredSize(new Dimension(170, 40));
         btn.setFocusPainted(false);

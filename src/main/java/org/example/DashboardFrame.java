@@ -36,7 +36,6 @@ public class DashboardFrame extends JFrame {
     @Setter
     private MyBot bot;
 
-    // הקבועים הפכו לפומביים כדי שפאנלים אחרים ישתמשו בהם לעיצוב אחיד
     public static final String VIEW_DASHBOARD = "Dashboard";
     public static final String VIEW_SURVEY = "Survey";
     public static final String VIEW_LIVE_STATUS = "LiveStatus";
@@ -44,23 +43,22 @@ public class DashboardFrame extends JFrame {
     public static final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
     public static final String FONT_NAME = "Segoe UI";
 
-    public static final Color BACKGROUND_PINK = new Color(253, 245, 247);
-    public static final Color HEADER_PINK = new Color(250, 220, 228);
-    public static final Color BUTTON_PINK = new Color(248, 190, 205);
-    public static final Color DARK_TEXT = new Color(70, 65, 68);
-    public static final Color BANNER_ROSE = new Color(224, 118, 151);
-    public static final Color BANNER_ROSE_DARK = new Color(200, 95, 128);
+    public static final Color MAIN_BG_COLOR = new Color(253, 250, 248);
+    public static final Color BORDER_COLOR = new Color(235, 224, 227);
+    public static final Color BUTTON_COLOR = new Color(180, 220, 220);
+    public static final Color DARK_TEXT = new Color(64, 59, 61);
+    public static final Color HEADER_COLOR = new Color(242, 204, 214);
+    public static final Color ACCENT_COLOR = new Color(214, 104, 129);
+    public static final Color TAB_UNDERLINE_ACTIVE = new Color(214, 104, 129);
     public static final Color TAB_BAR_BG = Color.WHITE;
-    public static final Color TAB_TEXT_INACTIVE = new Color(150, 140, 143);
-    public static final Color TAB_UNDERLINE_ACTIVE = new Color(214, 64, 110);
-    public static final Color GREEN_DONE = new Color(76, 175, 100);
-    public static final Color GREEN_ROW_BG = new Color(226, 247, 231);
-    public static final Color YELLOW_ROW_BG = new Color(255, 246, 212);
-    public static final Color GRAY_NOT_STARTED = new Color(160, 155, 158);
-    public static final Color BLUE_ACCENT = new Color(66, 140, 224);
-    public static final Color TRACK_GRAY = new Color(233, 230, 231);
+    public static final Color TAB_TEXT_INACTIVE = new Color(155, 145, 148);
+    public static final Color PROGRESS_DONE_COLOR = new Color(124, 198, 146);
+    public static final Color STATUS_PENDING_COLOR = new Color(215, 211, 213);
+    public static final Color PROGRESS_ACTIVE_COLOR = new Color(110, 164, 196);
+    public static final Color TRACK_GRAY = new Color(242, 240, 241);
 
     public DashboardFrame() {
+        setupModernPopups();
         this.setTitle("Telegram Survey Bot - לוח בקרה");
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize(screenSize.width, screenSize.height);
@@ -75,9 +73,7 @@ public class DashboardFrame extends JFrame {
         this.mainContainer = new JPanel(this.cardLayout);
         this.mainContainer.add(this.createDashboardPanel(), VIEW_DASHBOARD);
 
-        // כאן משלבים את המחלקה החדשה שיצרנו!
         this.mainContainer.add(new CreateSurveyPanel(this), VIEW_SURVEY);
-
         this.mainContainer.add(this.createLiveStatusPanel(), VIEW_LIVE_STATUS);
         this.mainContainer.add(this.createResultsPanel(), VIEW_RESULTS);
         root.add(this.mainContainer, BorderLayout.CENTER);
@@ -91,7 +87,7 @@ public class DashboardFrame extends JFrame {
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
 
         JPanel banner = new JPanel(new BorderLayout());
-        banner.setBackground(BANNER_ROSE);
+        banner.setBackground(HEADER_COLOR);
         banner.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
 
         JLabel title = new JLabel("Telegram Survey Bot  -  לוח בקרה");
@@ -108,7 +104,7 @@ public class DashboardFrame extends JFrame {
 
         JPanel tabBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         tabBar.setBackground(TAB_BAR_BG);
-        tabBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, HEADER_PINK));
+        tabBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER_COLOR));
 
         this.tabCommunityBtn = this.createTabButton("קהילה");
         this.tabCreateBtn = this.createTabButton("יצירת סקר");
@@ -156,7 +152,7 @@ public class DashboardFrame extends JFrame {
     }
 
     private void styleTab(JButton tab, boolean active) {
-        tab.setForeground(active ? BANNER_ROSE_DARK : TAB_TEXT_INACTIVE);
+        tab.setForeground(active ? ACCENT_COLOR : TAB_TEXT_INACTIVE);
         Color underline = active ? TAB_UNDERLINE_ACTIVE : TAB_BAR_BG;
         tab.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(14, 22, 11, 22),
@@ -178,21 +174,21 @@ public class DashboardFrame extends JFrame {
         JTableHeader header = table.getTableHeader();
         header.setFont(new Font(FONT_NAME, Font.BOLD, 15));
         header.setBackground(Color.WHITE);
-        header.setForeground(BANNER_ROSE_DARK);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, HEADER_PINK));
+        header.setForeground(ACCENT_COLOR);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, BORDER_COLOR));
         header.setPreferredSize(new Dimension(100, 45));
         header.setReorderingAllowed(false);
     }
 
     private JPanel createDashboardPanel() {
         JPanel panel = new JPanel(new BorderLayout(20, 20));
-        panel.setBackground(BACKGROUND_PINK);
+        panel.setBackground(MAIN_BG_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         JPanel cardPanel = new JPanel(new BorderLayout(0, 15));
-        cardPanel.setBackground(Color.WHITE);
+        cardPanel.setBackground(Color.WHITE); // הכרטיסייה נשארת לבנה ואטומה
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
@@ -207,7 +203,7 @@ public class DashboardFrame extends JFrame {
         cardPanel.add(topPanel, BorderLayout.NORTH);
 
         JScrollPane tableScroll = this.createTablePanel();
-        tableScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, HEADER_PINK));
+        tableScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER_COLOR));
         cardPanel.add(tableScroll, BorderLayout.CENTER);
 
         panel.add(cardPanel, BorderLayout.CENTER);
@@ -244,20 +240,18 @@ public class DashboardFrame extends JFrame {
 
     private JPanel createLiveStatusPanel() {
         JPanel panel = new JPanel(new BorderLayout(18, 18));
-        panel.setBackground(BACKGROUND_PINK);
+        panel.setBackground(MAIN_BG_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         this.liveTitleLabel = new JLabel("אין סקר פעיל כרגע", SwingConstants.CENTER);
         this.liveTitleLabel.setFont(new Font(FONT_NAME, Font.BOLD, 24));
-        this.liveTitleLabel.setForeground(BANNER_ROSE_DARK);
+        this.liveTitleLabel.setForeground(ACCENT_COLOR);
         panel.add(this.liveTitleLabel, BorderLayout.NORTH);
 
         JPanel centerStack = new JPanel(new BorderLayout(14, 14));
-        centerStack.setBackground(BACKGROUND_PINK);
-
+        centerStack.setBackground(MAIN_BG_COLOR);
         JPanel cardsRow = new JPanel(new GridLayout(1, 3, 15, 0));
-        cardsRow.setBackground(BACKGROUND_PINK);
-
+        cardsRow.setBackground(MAIN_BG_COLOR);
         this.liveParticipantsValue = new JLabel("0", SwingConstants.CENTER);
         this.liveCompletedValue = new JLabel("0", SwingConstants.CENTER);
         this.liveRemainingValue = new JLabel("0", SwingConstants.CENTER);
@@ -270,7 +264,7 @@ public class DashboardFrame extends JFrame {
         this.liveTimeLeftLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
         this.liveTimeLeftLabel.setForeground(Color.WHITE);
         this.liveTimeLeftLabel.setOpaque(true);
-        this.liveTimeLeftLabel.setBackground(BANNER_ROSE);
+        this.liveTimeLeftLabel.setBackground(HEADER_COLOR);
         this.liveTimeLeftLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         this.liveTimeLeftLabel.setVisible(false);
@@ -303,12 +297,12 @@ public class DashboardFrame extends JFrame {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(16, 10, 16, 10)
         ));
 
         valueLabel.setFont(new Font(FONT_NAME, Font.BOLD, 30));
-        valueLabel.setForeground(BANNER_ROSE_DARK);
+        valueLabel.setForeground(ACCENT_COLOR);
         valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel captionLabel = new JLabel(caption, SwingConstants.CENTER);
@@ -362,21 +356,21 @@ public class DashboardFrame extends JFrame {
 
     private JPanel createResultsPanel() {
         JPanel outer = new JPanel(new BorderLayout());
-        outer.setBackground(BACKGROUND_PINK);
+        outer.setBackground(MAIN_BG_COLOR);
         outer.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         this.resultsContentPanel = new JPanel();
         this.resultsContentPanel.setLayout(new BoxLayout(this.resultsContentPanel, BoxLayout.Y_AXIS));
-        this.resultsContentPanel.setBackground(BACKGROUND_PINK);
+        this.resultsContentPanel.setBackground(MAIN_BG_COLOR);
 
         JScrollPane scrollPane = new JScrollPane(this.resultsContentPanel);
         scrollPane.setBorder(null);
+        scrollPane.setOpaque(false); // שקיפות כדי שתמונת הרקע תעבור דרך אזור הגלילה
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        // --- החלת העיצוב המודרני מהמחלקה החיצונית ---
         scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0)); // פס דק ואלגנטי
-        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 0)); // העלמת פס אופקי
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 0));
 
         outer.add(scrollPane, BorderLayout.CENTER);
 
@@ -431,7 +425,7 @@ public class DashboardFrame extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(HEADER_PINK, 1, true),
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(16, 18, 16, 18)
         ));
         panel.setMaximumSize(new Dimension(760, 400));
@@ -448,11 +442,11 @@ public class DashboardFrame extends JFrame {
         for (ActiveSurveySession.AnswerResult ar : qr.answers) {
             Color fillColor;
             if (ar.votes == 0) {
-                fillColor = GRAY_NOT_STARTED;
+                fillColor = STATUS_PENDING_COLOR;
             } else if (rank == 0) {
-                fillColor = GREEN_DONE;
+                fillColor = PROGRESS_DONE_COLOR;
             } else {
-                fillColor = BLUE_ACCENT;
+                fillColor = PROGRESS_ACTIVE_COLOR;
             }
 
             JPanel row = new JPanel(new BorderLayout(12, 0));
@@ -478,5 +472,19 @@ public class DashboardFrame extends JFrame {
             rank++;
         }
         return panel;
+    }
+
+    public static void setupModernPopups() {
+        UIManager.put("OptionPane.background", Color.WHITE);
+        UIManager.put("Panel.background", Color.WHITE);
+        UIManager.put("OptionPane.messageFont", new Font(FONT_NAME, Font.PLAIN, 15));
+        UIManager.put("OptionPane.buttonFont", new Font(FONT_NAME, Font.BOLD, 14));
+        UIManager.put("Button.background", BUTTON_COLOR);
+        UIManager.put("Button.foreground", DARK_TEXT);
+        UIManager.put("Button.focus", new Color(0, 0, 0, 0)); // מעלים את הריבוע המכוער בלחיצה
+        UIManager.put("Button.border", BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
     }
 }
