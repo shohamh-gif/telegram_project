@@ -3,11 +3,16 @@ package org.example;
 import lombok.Getter;
 import lombok.Setter;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
+import org.telegram.telegrambots.meta.api.methods.polls.StopPoll;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.polls.PollAnswer;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MyBot extends TelegramLongPollingBot {
@@ -17,34 +22,51 @@ public class MyBot extends TelegramLongPollingBot {
     @Setter
     @Getter
     private boolean isSurveyActive;
+    private ActiveSurveySession currentSession;
 
     public MyBot(DashboardFrame dashboard) {
         this.communityUsers = new HashMap<>();
         this.dashboard = dashboard;
-        this.isSurveyActive = false; // אתחול מצב הסקר
+        this.isSurveyActive = false;
     }
 
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-            String firstName = update.getMessage().getFrom().getFirstName();
-            String username = update.getMessage().getFrom().getUserName();
+            handleTextMessage(update.getMessage());
+        } else if (update.hasPollAnswer()) {
+            handlePollAnswer(update.getPollAnswer());
+        }
+    }
 
-            if (messageText.equals("היי") || messageText.equalsIgnoreCase("hi") || messageText.equals("/start")) {
+    private void handleTextMessage(Message message) {
+        String messageText = message.getText();
+        long chatId = message.getChatId();
+        String firstName = message.getFrom().getFirstName();
+        String username = message.getFrom().getUserName();
 
-                if (!this.communityUsers.containsKey(chatId)) {
-                    CommunityUser newUser = new CommunityUser(chatId, firstName, username);
-                    this.communityUsers.put(chatId, newUser);
-
-                    this.dashboard.addUserToTable(newUser);
-                    this.notifyOtherMembers(newUser);
-                } else {
-                    System.out.println("המשתמש כבר קיים בקהילה.");
-                }
+        if (messageText.equals("היי") || messageText.equalsIgnoreCase("hi") || messageText.equals("/start")) {
+            if (!this.communityUsers.containsKey(chatId)) {
+                CommunityUser newUser = new CommunityUser(chatId, firstName, username);
+                this.communityUsers.put(chatId, newUser);
+                this.dashboard.addUserToTable(newUser);
+                this.notifyOtherMembers(newUser);
+                this.sendTextMessage(String.valueOf(chatId),
+                        "ברוך/ה הבא/ה לקהילה! 🎉 כאן תקבל/י התראה בכל פעם שייפתח סקר חדש.");
+            } else {
+                System.out.println("המשתמש כבר קיים בקהילה.");
             }
         }
+    }
+
+    /** מגיע כאן כל פעם שמשתמש עונה (או משנה/מבטל תשובה) בסקר Telegram מובנה */
+    private void handlePollAnswer(PollAnswer pollAnswer) {
+        if (this.currentSession == null) {
+            return; // אין סקר פעיל כרגע - מתעלמים
+        }
+        long chatId = pollAnswer.getUser().getId();
+        String pollId = pollAnswer.getPollId();
+        this.currentSession.recordVote(chatId, pollId, pollAnswer.getOptionIds());
     }
 
     private void notifyOtherMembers(CommunityUser newMember) {
@@ -53,38 +75,78 @@ public class MyBot extends TelegramLongPollingBot {
 
         for (CommunityUser user : this.communityUsers.values()) {
             if (user.getChatId() != newMember.getChatId()) {
-                SendMessage message = new SendMessage();
-                message.setChatId(user.getChatId());
-                message.setText(text);
-                try {
-                    execute(message);
-                } catch (TelegramApiException e) {
-                    System.out.println("שגיאה בשליחת הודעה: " + e.getMessage());
-                }
+                this.sendTextMessage(String.valueOf(user.getChatId()), text);
             }
         }
     }
 
-    public void sendSurveyToChat(String chatId, SurveyData survey) {
-        org.telegram.telegrambots.meta.api.methods.polls.SendPoll sendPoll = new org.telegram.telegrambots.meta.api.methods.polls.SendPoll();
+    /**
+     * נקודת הכניסה המרכזית להתחלת סקר: יוצרת סשן חדש (תמונת מצב של הקהילה כרגע),
+     * שולחת את כל השאלות לכל המשתתפים, ומעדכנת את ה-Swing שסקר התחיל.
+     * זו הפונקציה שצריך לקרוא לה מה-Dashboard (ולא ל-sendSurveyToChat ישירות בלולאה).
+     */
+    public void startSurvey(List<SurveyData> questions) {
+        this.currentSession = new ActiveSurveySession(this.communityUsers, questions.size(), this, this.dashboard);
+        this.isSurveyActive = true;
+        this.dashboard.onSurveyStarted(this.currentSession);
 
+        // השליחה בפועל (N משתתפים * M שאלות = הרבה קריאות רשת) רצה ב-thread נפרד,
+        // כדי לא להקפיא את ה-EDT ואת כל חלון ה-Swing בזמן השליחה.
+        new Thread(() -> {
+            for (CommunityUser user : this.currentSession.getParticipants().values()) {
+                for (SurveyData question : questions) {
+                    sendSurveyToChat(String.valueOf(user.getChatId()), question);
+                }
+            }
+        }, "survey-dispatch-thread").start();
+    }
+
+    /** שולחת שאלה בודדת כסקר Telegram לא-אנונימי ורושמת את ה-poll_id שהתקבל בסשן הפעיל */
+    private void sendSurveyToChat(String chatId, SurveyData survey) {
+        SendPoll sendPoll = new SendPoll();
         sendPoll.setChatId(chatId);
-        sendPoll.setQuestion(survey.getQuestion()); // לוקח את השאלה מתוך האובייקט
-        sendPoll.setOptions(survey.getAnswers());   // לוקח את התשובות מתוך האובייקט
+        sendPoll.setQuestion(survey.getQuestion());
+        sendPoll.setOptions(survey.getAnswers());
+        sendPoll.setIsAnonymous(false);       // חובה! בלי זה אי אפשר לדעת מי הצביע מה
+        sendPoll.setAllowMultipleAnswers(false);
 
         try {
-            execute(sendPoll); // פקודה של טלגרם שמשגרת את הסקר
-            System.out.println("הסקר שוגר בהצלחה למשתמש: " + chatId);
+            Message sentMessage = execute(sendPoll);
+            String pollId = sentMessage.getPoll().getId();
+            int messageId = sentMessage.getMessageId();
+            if (this.currentSession != null) {
+                this.currentSession.registerPollId(pollId, survey, Long.parseLong(chatId), messageId);
+            }
         } catch (TelegramApiException e) {
             System.out.println("שגיאה בשליחת הסקר לטלגרם: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
-    // הפונקציה החדשה שמפיצה את הסקר לכל חברי הקהילה במקביל!
-    public void broadcastSurvey(SurveyData survey) {
-        for (CommunityUser user : this.communityUsers.values()) {
-            sendSurveyToChat(String.valueOf(user.getChatId()), survey);
+    /** סוגר poll אישי ספציפי (הודעה בודדת אצל משתמש בודד) כדי למנוע ממנו לענות עליו פעם נוספת */
+    public void stopPoll(long chatId, int messageId) {
+        StopPoll stopPoll = new StopPoll();
+        stopPoll.setChatId(String.valueOf(chatId));
+        stopPoll.setMessageId(messageId);
+        try {
+            execute(stopPoll);
+        } catch (TelegramApiException e) {
+            System.out.println("שגיאה בסגירת ה-poll האישי: " + e.getMessage());
+        }
+    }
+
+    /** נקרא מ-ActiveSurveySession כשהסקר נסגר, כדי לנקות את המצב הגלובלי בבוט */
+    public void onSurveyEnded() {
+        this.currentSession = null;
+    }
+
+    public void sendTextMessage(String chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(text);
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 

@@ -5,6 +5,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import com.google.gson.Gson;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class AiSurveyTask extends SwingWorker<String, Void> {
     private String topic;
     private SurveyApiService apiService;
@@ -12,7 +15,6 @@ public class AiSurveyTask extends SwingWorker<String, Void> {
     private DashboardFrame dashboard;
     private JButton sendBtn;
 
-    // בנאי שמקבל את כל התלויות מבחוץ
     public AiSurveyTask(String topic, SurveyApiService apiService, MyBot bot, DashboardFrame dashboard, JButton sendBtn) {
         this.topic = topic;
         this.apiService = apiService;
@@ -23,7 +25,6 @@ public class AiSurveyTask extends SwingWorker<String, Void> {
 
     @Override
     protected String doInBackground() {
-        // רץ ברקע מול השרת
         return this.apiService.generateSurvey(this.topic);
     }
 
@@ -34,12 +35,18 @@ public class AiSurveyTask extends SwingWorker<String, Void> {
             if (result != null) {
                 result = result.replace("```json", "").replace("```", "").trim();
                 Gson gson = new Gson();
-                SurveyData survey = gson.fromJson(result, SurveyData.class);
+                // ה-API מתבקש להחזיר מערך JSON של 1-3 שאלות: [{"question":"...","answers":["...","..."]}]
+                SurveyData[] questions = gson.fromJson(result, SurveyData[].class);
 
-                this.bot.broadcastSurvey(survey);
+                if (questions == null || questions.length == 0) {
+                    throw new IllegalStateException("לא התקבלו שאלות מה-AI");
+                }
+
+                List<SurveyData> questionList = Arrays.asList(questions);
+                this.bot.startSurvey(questionList);
 
                 JOptionPane.showMessageDialog(this.dashboard, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
-                this.dashboard.onAiSurveySuccess(); // קריאה למסך שיתעדכן
+                this.dashboard.onAiSurveySuccess();
             } else {
                 this.bot.setSurveyActive(false);
                 JOptionPane.showMessageDialog(this.dashboard, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
@@ -49,7 +56,6 @@ public class AiSurveyTask extends SwingWorker<String, Void> {
             JOptionPane.showMessageDialog(this.dashboard, "שגיאה בפירוק הנתונים או בשליחה.", "שגיאה", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         } finally {
-            // החזרת הכפתור למצב פעיל
             this.sendBtn.setEnabled(true);
             this.sendBtn.setText("שלח סקר");
         }
