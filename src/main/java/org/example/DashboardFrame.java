@@ -43,19 +43,20 @@ public class DashboardFrame extends JFrame {
     public static final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
     public static final String FONT_NAME = "Segoe UI";
 
-    public static final Color MAIN_BG_COLOR = new Color(253, 250, 248);
-    public static final Color BORDER_COLOR = new Color(235, 224, 227);
-    public static final Color BUTTON_COLOR = new Color(180, 220, 220);
-    public static final Color DARK_TEXT = new Color(64, 59, 61);
-    public static final Color HEADER_COLOR = new Color(242, 204, 214);
-    public static final Color ACCENT_COLOR = new Color(214, 104, 129);
-    public static final Color TAB_UNDERLINE_ACTIVE = new Color(214, 104, 129);
+    // --- פלטה מאוזנת: וורוד = אקצנט בלבד (באנר, כפתור עיקרי, מצב פעיל), טורקיז = אקצנט משני ---
+    public static final Color MAIN_BG_COLOR = new Color(250, 247, 241);   // קרם חמים ונייטרלי
+    public static final Color BORDER_COLOR = new Color(226, 217, 205);   // חום-בז' עדין
+    public static final Color BUTTON_COLOR = new Color(122, 155, 108);   // ירוק שני - אקצנט משני
+    public static final Color DARK_TEXT = new Color(64, 56, 48);         // חום כהה חם, לא אפור
+    public static final Color HEADER_COLOR = new Color(214, 188, 156);  // חום-בז' בהיר - שימוש עדין בלבד
+    public static final Color ACCENT_COLOR = new Color(150, 98, 62);    // חום טרה-קוטה עמוק - אקצנט ראשי
+    public static final Color TAB_UNDERLINE_ACTIVE = new Color(150, 98, 62);
     public static final Color TAB_BAR_BG = Color.WHITE;
     public static final Color TAB_TEXT_INACTIVE = new Color(155, 145, 148);
-    public static final Color PROGRESS_DONE_COLOR = new Color(124, 198, 146);
-    public static final Color STATUS_PENDING_COLOR = new Color(215, 211, 213);
-    public static final Color PROGRESS_ACTIVE_COLOR = new Color(110, 164, 196);
-    public static final Color TRACK_GRAY = new Color(242, 240, 241);
+    public static final Color PROGRESS_DONE_COLOR = new Color(107, 142, 96);  // ירוק שלווה - גם "הושלם" וגם אקצנט
+    public static final Color STATUS_PENDING_COLOR = new Color(219, 212, 202);
+    public static final Color PROGRESS_ACTIVE_COLOR = new Color(196, 156, 92); // זהוב-חרדל - גיוון שלישי
+    public static final Color TRACK_GRAY = new Color(238, 233, 226);
 
     public DashboardFrame() {
         setupModernPopups();
@@ -87,7 +88,7 @@ public class DashboardFrame extends JFrame {
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
 
         JPanel banner = new JPanel(new BorderLayout());
-        banner.setBackground(HEADER_COLOR);
+        banner.setBackground(ACCENT_COLOR); // תוקן: היה HEADER_COLOR (בהיר מדי) עם טקסט לבן - לא קריא
         banner.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
 
         JLabel title = new JLabel("Telegram Survey Bot  -  לוח בקרה");
@@ -186,7 +187,7 @@ public class DashboardFrame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         JPanel cardPanel = new JPanel(new BorderLayout(0, 15));
-        cardPanel.setBackground(Color.WHITE); // הכרטיסייה נשארת לבנה ואטומה
+        cardPanel.setBackground(Color.WHITE); // הכרטיסייה נשארת לבנה ואטומה גם מעל תמונת רקע
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
@@ -249,9 +250,9 @@ public class DashboardFrame extends JFrame {
         panel.add(this.liveTitleLabel, BorderLayout.NORTH);
 
         JPanel centerStack = new JPanel(new BorderLayout(14, 14));
-        centerStack.setBackground(MAIN_BG_COLOR);
+        centerStack.setOpaque(false); // שקוף - כדי שתמונת/צבע הרקע יעברו דרכו
         JPanel cardsRow = new JPanel(new GridLayout(1, 3, 15, 0));
-        cardsRow.setBackground(MAIN_BG_COLOR);
+        cardsRow.setOpaque(false);
         this.liveParticipantsValue = new JLabel("0", SwingConstants.CENTER);
         this.liveCompletedValue = new JLabel("0", SwingConstants.CENTER);
         this.liveRemainingValue = new JLabel("0", SwingConstants.CENTER);
@@ -264,7 +265,7 @@ public class DashboardFrame extends JFrame {
         this.liveTimeLeftLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
         this.liveTimeLeftLabel.setForeground(Color.WHITE);
         this.liveTimeLeftLabel.setOpaque(true);
-        this.liveTimeLeftLabel.setBackground(HEADER_COLOR);
+        this.liveTimeLeftLabel.setBackground(ACCENT_COLOR); // תוקן: היה HEADER_COLOR (בהיר מדי) עם טקסט לבן
         this.liveTimeLeftLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         this.liveTimeLeftLabel.setVisible(false);
@@ -318,7 +319,9 @@ public class DashboardFrame extends JFrame {
 
     public void onSurveyStarted(ActiveSurveySession session) {
         SwingUtilities.invokeLater(() -> {
-            this.liveTitleLabel.setText("● סקר פעיל");
+            this.liveTitleLabel.setText("סקר פעיל");
+            this.liveTitleLabel.setIcon(VectorIcons.dot(PROGRESS_DONE_COLOR, 14));
+            this.liveTitleLabel.setIconTextGap(10);
             this.liveTimeLeftLabel.setVisible(true);
             this.switchTab(VIEW_LIVE_STATUS);
         });
@@ -361,11 +364,12 @@ public class DashboardFrame extends JFrame {
 
         this.resultsContentPanel = new JPanel();
         this.resultsContentPanel.setLayout(new BoxLayout(this.resultsContentPanel, BoxLayout.Y_AXIS));
-        this.resultsContentPanel.setBackground(MAIN_BG_COLOR);
+        this.resultsContentPanel.setOpaque(false); // שקוף - הרקע (תמונה/צבע) עובר דרכו
 
         JScrollPane scrollPane = new JScrollPane(this.resultsContentPanel);
         scrollPane.setBorder(null);
-        scrollPane.setOpaque(false); // שקיפות כדי שתמונת הרקע תעבור דרך אזור הגלילה
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false); // חובה גם כאן, אחרת ה-viewport מכסה את הרקע
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
@@ -394,6 +398,7 @@ public class DashboardFrame extends JFrame {
         SwingUtilities.invokeLater(() -> {
             this.lastResults = results;
             this.liveTitleLabel.setText("אין סקר פעיל כרגע");
+            this.liveTitleLabel.setIcon(null);
             this.liveTimeLeftLabel.setVisible(false);
 
             this.resultsContentPanel.removeAll();
@@ -481,7 +486,7 @@ public class DashboardFrame extends JFrame {
         UIManager.put("OptionPane.buttonFont", new Font(FONT_NAME, Font.BOLD, 14));
         UIManager.put("Button.background", BUTTON_COLOR);
         UIManager.put("Button.foreground", DARK_TEXT);
-        UIManager.put("Button.focus", new Color(0, 0, 0, 0)); // מעלים את הריבוע המכוער בלחיצה
+        UIManager.put("Button.focus", new Color(0, 0, 0, 0));
         UIManager.put("Button.border", BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(5, 15, 5, 15)
