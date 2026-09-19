@@ -78,11 +78,11 @@ public class CreateSurveyPanel extends JPanel {
             if (bot == null) return;
 
             if (bot.getCommunityUsers().size() < 3) {
-                JOptionPane.showMessageDialog(this.parentFrame, "לא ניתן להתחיל סקר. נדרשים לפחות 3 חברים בקהילה!", "חסימה", JOptionPane.WARNING_MESSAGE);
+                StyledDialogs.showWarning(this.parentFrame, "לא ניתן להתחיל סקר. נדרשים לפחות 3 חברים בקהילה!");
                 return;
             }
             if (bot.isSurveyActive()) {
-                JOptionPane.showMessageDialog(this.parentFrame, "יש סקר פעיל (או בהשהיה) כרגע! חובה להמתין לסיומו.", "חסימה", JOptionPane.WARNING_MESSAGE);
+                StyledDialogs.showWarning(this.parentFrame, "יש סקר פעיל (או בהשהיה) כרגע! חובה להמתין לסיומו.");
                 return;
             }
 
@@ -90,7 +90,7 @@ public class CreateSurveyPanel extends JPanel {
             try {
                 delayMinutes = Integer.parseInt(this.delayField.getText().trim());
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this.parentFrame, "נא להזין מספר דקות תקין!", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                StyledDialogs.showError(this.parentFrame, "נא להזין מספר דקות תקין!");
                 return;
             }
 
@@ -201,7 +201,7 @@ public class CreateSurveyPanel extends JPanel {
                 timeLeft[0]--;
             } else {
                 ((Timer) e.getSource()).stop();
-                this.countdownLabel.setText("✓ הסקר נשלח!");
+                this.countdownLabel.setText("הסקר נשלח!");
                 executeSurveyDispatch(sendBtn);
             }
         });
@@ -211,7 +211,7 @@ public class CreateSurveyPanel extends JPanel {
     private void handleAISurvey(JButton sendBtn) {
         String topic = this.aiTopicField.getText().trim();
         if (topic.isEmpty()) {
-            JOptionPane.showMessageDialog(this.parentFrame, "נא להזין נושא לסקר", "שגיאה", JOptionPane.WARNING_MESSAGE);
+            StyledDialogs.showWarning(this.parentFrame, "נא להזין נושא לסקר");
             return;
         }
 
@@ -237,7 +237,7 @@ public class CreateSurveyPanel extends JPanel {
 
             if (question.isEmpty()) {
                 if (block == 0) {
-                    JOptionPane.showMessageDialog(this.parentFrame, "נא להזין לפחות את השאלה הראשונה", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                    StyledDialogs.showWarning(this.parentFrame, "נא להזין לפחות את השאלה הראשונה");
                     return;
                 }
                 continue;
@@ -252,7 +252,7 @@ public class CreateSurveyPanel extends JPanel {
             }
 
             if (answers.size() < 2) {
-                JOptionPane.showMessageDialog(this.parentFrame, "שאלה " + (block + 1) + " חייבת להכיל לפחות 2 תשובות!", "שגיאה", JOptionPane.WARNING_MESSAGE);
+                StyledDialogs.showWarning(this.parentFrame, "שאלה " + (block + 1) + " חייבת להכיל לפחות 2 תשובות!");
                 return;
             }
 
@@ -261,7 +261,7 @@ public class CreateSurveyPanel extends JPanel {
 
         this.parentFrame.getBot().startSurvey(surveyQuestions);
 
-        JOptionPane.showMessageDialog(this.parentFrame, "הסקר הידני נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+        StyledDialogs.showSuccess(this.parentFrame, "הסקר הידני נשלח לטלגרם בהצלחה!");
 
         for (JTextField field : this.allManualFields) {
             field.setText("");

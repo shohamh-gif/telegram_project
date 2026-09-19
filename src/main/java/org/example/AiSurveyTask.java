@@ -1,7 +1,6 @@
 package org.example;
 
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import com.google.gson.Gson;
 import java.util.Arrays;
@@ -45,15 +44,15 @@ public class AiSurveyTask extends SwingWorker<String, Void> {
                 List<SurveyData> questionList = Arrays.asList(questions);
                 this.bot.startSurvey(questionList);
 
-                JOptionPane.showMessageDialog(this.dashboard, "הסקר נשלח לטלגרם בהצלחה!", "הצלחה", JOptionPane.INFORMATION_MESSAGE);
+                StyledDialogs.showSuccess(this.dashboard, "הסקר נשלח לטלגרם בהצלחה!");
                 this.surveyPanel.onAiSurveySuccess();
             } else {
                 this.bot.setSurveyActive(false);
-                JOptionPane.showMessageDialog(this.dashboard, "שגיאה ביצירת הסקר מול השרת.", "שגיאה", JOptionPane.ERROR_MESSAGE);
+                StyledDialogs.showError(this.dashboard, "שגיאה ביצירת הסקר מול השרת.");
             }
         } catch (Exception ex) {
             this.bot.setSurveyActive(false);
-            JOptionPane.showMessageDialog(this.dashboard, "שגיאה בפירוק הנתונים או בשליחה.", "שגיאה", JOptionPane.ERROR_MESSAGE);
+            StyledDialogs.showError(this.dashboard, "שגיאה בפירוק הנתונים או בשליחה.");
             ex.printStackTrace();
         } finally {
             this.sendBtn.setEnabled(true);
