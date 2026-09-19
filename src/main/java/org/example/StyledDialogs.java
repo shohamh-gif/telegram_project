@@ -23,9 +23,10 @@ public class StyledDialogs {
         Window owner = SwingUtilities.getWindowAncestor(parent);
         JDialog dialog = new JDialog(owner, title, Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setUndecorated(true);
-        dialog.setBackground(new Color(0, 0, 0, 0)); // חלון שקוף מאחורי הפינות המעוגלות
+        dialog.setBackground(new Color(0, 0, 0, 0));
 
-        int width = 400;
+        // הגדלנו את החלון ל-440 כדי לתת לטקסט יותר מקום להתפרס
+        int width = 440;
 
         JPanel content = new JPanel(new BorderLayout(0, 0)) {
             @Override
@@ -43,12 +44,10 @@ public class StyledDialogs {
         content.setOpaque(false);
         content.setBorder(BorderFactory.createEmptyBorder(22, 24, 18, 24));
 
-        // --- רצועת עליון צבעונית + תגית עגולה עם סמל ---
         JPanel topRow = new JPanel(new BorderLayout(14, 0));
         topRow.setOpaque(false);
-        topRow.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
-        JLabel badge = new JLabel(String.valueOf(SwingConstants.CENTER)) {
+        JLabel badge = new JLabel() {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -64,17 +63,18 @@ public class StyledDialogs {
         badge.setHorizontalAlignment(SwingConstants.CENTER);
         badge.setVerticalAlignment(SwingConstants.CENTER);
 
-        JLabel titleLabel = new JLabel(title);
+        JLabel titleLabel = new JLabel(title, SwingConstants.RIGHT);
         titleLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 18));
         titleLabel.setForeground(DashboardFrame.DARK_TEXT);
 
-        topRow.add(badge, BorderLayout.EAST);
         topRow.add(titleLabel, BorderLayout.CENTER);
+        topRow.add(badge, BorderLayout.EAST);
 
-        JLabel messageLabel = new JLabel("<html><div style='text-align:right; width:300px;'>" + message + "</div></html>");
+        // תוקן: div עם padding-right מבטיח שהאות הראשונה לא תחתך
+        JLabel messageLabel = new JLabel("<html><div dir='rtl' style='text-align:right; width:280px; padding-right:8px;'>" + message + "</div></html>");
         messageLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
         messageLabel.setForeground(DashboardFrame.DARK_TEXT);
-        messageLabel.setBorder(BorderFactory.createEmptyBorder(14, 0, 18, 0));
+        messageLabel.setBorder(BorderFactory.createEmptyBorder(14, 0, 18, 54));
         messageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         JButton okBtn = new JButton("אישור");

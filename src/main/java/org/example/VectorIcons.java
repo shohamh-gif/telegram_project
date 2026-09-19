@@ -41,6 +41,47 @@ public class VectorIcons {
         });
     }
 
+    public static Icon user(Color color, int size) {
+        return new SimpleIcon(size, g2 -> {
+            g2.setColor(color);
+            int headSize = (int)(size * 0.4);
+            g2.fillOval((size - headSize) / 2, (int)(size * 0.1), headSize, headSize);
+            g2.fillArc((int)(size * 0.15), (int)(size * 0.55), (int)(size * 0.7), (int)(size * 0.8), 0, 180);
+        });
+    }
+
+    public static Icon plus(Color color, int size) {
+        return new SimpleIcon(size, g2 -> {
+            g2.setColor(color);
+            g2.setStroke(new BasicStroke(Math.max(2f, size * 0.12f), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            int m = (int)(size * 0.2);
+            int c = size / 2;
+            g2.drawLine(c, m, c, size - m);
+            g2.drawLine(m, c, size - m, c);
+        });
+    }
+
+    public static Icon play(Color color, int size) {
+        return new SimpleIcon(size, g2 -> {
+            g2.setColor(color);
+            int[] x = {(int)(size * 0.3), (int)(size * 0.3), (int)(size * 0.8)};
+            int[] y = {(int)(size * 0.2), (int)(size * 0.8), (int)(size * 0.5)};
+            g2.fillPolygon(x, y, 3);
+        });
+    }
+
+    public static Icon chart(Color color, int size) {
+        return new SimpleIcon(size, g2 -> {
+            g2.setColor(color);
+            int w = (int)(size * 0.18);
+            int gap = (int)(size * 0.12);
+            int x1 = (int)(size * 0.15);
+            g2.fillRect(x1, (int)(size * 0.4), w, (int)(size * 0.5));
+            g2.fillRect(x1 + w + gap, (int)(size * 0.2), w, (int)(size * 0.7));
+            g2.fillRect(x1 + 2 * (w + gap), (int)(size * 0.5), w, (int)(size * 0.4));
+        });
+    }
+
     @FunctionalInterface
     private interface Painter {
         void paint(Graphics2D g2);

@@ -38,10 +38,8 @@ public class ModernScrollBarUI extends BasicScrollBarUI {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // צבע ורוד עמוק עם טיפה שקיפות למראה מרחף
-        g2.setColor(new Color(214, 64, 110, 150));
+        g2.setColor(DashboardFrame.HEADER_COLOR);
 
-        // ציור פס הגלילה עם קצוות מעוגלים (ריפוד של 2 פיקסלים מהצדדים)
         g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2, thumbBounds.width - 4, thumbBounds.height - 4, 8, 8);
         g2.dispose();
     }

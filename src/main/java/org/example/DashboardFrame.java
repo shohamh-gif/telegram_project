@@ -146,14 +146,18 @@ public class DashboardFrame extends JFrame {
     public void switchTab(String viewKey) {
         this.activeTab = viewKey;
         this.cardLayout.show(this.mainContainer, viewKey);
-        this.styleTab(this.tabCommunityBtn, VIEW_DASHBOARD.equals(viewKey));
-        this.styleTab(this.tabCreateBtn, VIEW_SURVEY.equals(viewKey));
-        this.styleTab(this.tabLiveBtn, VIEW_LIVE_STATUS.equals(viewKey));
-        this.styleTab(this.tabResultsBtn, VIEW_RESULTS.equals(viewKey));
+
+        this.styleTab(this.tabCommunityBtn, VIEW_DASHBOARD.equals(viewKey), VectorIcons.user(ACCENT_COLOR, 18), VectorIcons.user(TAB_TEXT_INACTIVE, 18));
+        this.styleTab(this.tabCreateBtn, VIEW_SURVEY.equals(viewKey), VectorIcons.plus(ACCENT_COLOR, 18), VectorIcons.plus(TAB_TEXT_INACTIVE, 18));
+        this.styleTab(this.tabLiveBtn, VIEW_LIVE_STATUS.equals(viewKey), VectorIcons.play(ACCENT_COLOR, 18), VectorIcons.play(TAB_TEXT_INACTIVE, 18));
+        this.styleTab(this.tabResultsBtn, VIEW_RESULTS.equals(viewKey), VectorIcons.chart(ACCENT_COLOR, 18), VectorIcons.chart(TAB_TEXT_INACTIVE, 18));
     }
 
-    private void styleTab(JButton tab, boolean active) {
+    private void styleTab(JButton tab, boolean active, Icon activeIcon, Icon inactiveIcon) {
         tab.setForeground(active ? ACCENT_COLOR : TAB_TEXT_INACTIVE);
+        tab.setIcon(active ? activeIcon : inactiveIcon);
+        tab.setIconTextGap(10); // מרווח נקי ואסתטי בין האייקון לטקסט
+
         Color underline = active ? TAB_UNDERLINE_ACTIVE : TAB_BAR_BG;
         tab.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(14, 22, 11, 22),
@@ -257,9 +261,9 @@ public class DashboardFrame extends JFrame {
         this.liveCompletedValue = new JLabel("0", SwingConstants.CENTER);
         this.liveRemainingValue = new JLabel("0", SwingConstants.CENTER);
 
-        cardsRow.add(this.createStatCard(this.liveParticipantsValue, "סה\"כ משתתפים"));
-        cardsRow.add(this.createStatCard(this.liveCompletedValue, "סיימו"));
-        cardsRow.add(this.createStatCard(this.liveRemainingValue, "טרם סיימו"));
+        cardsRow.add(this.createStatCard(this.liveParticipantsValue, "סה\"כ משתתפים", VectorIcons.user(PROGRESS_ACTIVE_COLOR, 28)));
+        cardsRow.add(this.createStatCard(this.liveCompletedValue, "סיימו", VectorIcons.check(PROGRESS_DONE_COLOR, 28)));
+        cardsRow.add(this.createStatCard(this.liveRemainingValue, "טרם סיימו", VectorIcons.dot(STATUS_PENDING_COLOR, 28)));
 
         this.liveTimeLeftLabel = new JLabel("זמן שנותר: 05:00", SwingConstants.CENTER);
         this.liveTimeLeftLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
@@ -293,26 +297,41 @@ public class DashboardFrame extends JFrame {
         return panel;
     }
 
-    private JPanel createStatCard(JLabel valueLabel, String caption) {
-        JPanel card = new JPanel();
+    private JPanel createStatCard(JLabel valueLabel, String caption, Icon cardIcon) {
+        // יצירת הכרטיסייה עם פינות מעוגלות רכות
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 24, 24);
+                g2.setColor(BORDER_COLOR);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 24, 24);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setOpaque(false);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
-                BorderFactory.createEmptyBorder(16, 10, 16, 10)
-        ));
+        card.setBorder(BorderFactory.createEmptyBorder(22, 10, 22, 10));
 
-        valueLabel.setFont(new Font(FONT_NAME, Font.BOLD, 30));
+        JLabel iconLabel = new JLabel(cardIcon);
+        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        valueLabel.setFont(new Font(FONT_NAME, Font.BOLD, 36)); // פונט קצת יותר דרמטי ומרשים למספרים
         valueLabel.setForeground(ACCENT_COLOR);
         valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel captionLabel = new JLabel(caption, SwingConstants.CENTER);
-        captionLabel.setFont(new Font(FONT_NAME, Font.PLAIN, 14));
+        captionLabel.setFont(new Font(FONT_NAME, Font.PLAIN, 15));
         captionLabel.setForeground(DARK_TEXT);
         captionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        card.add(iconLabel);
+        card.add(Box.createVerticalStrut(8));
         card.add(valueLabel);
-        card.add(Box.createVerticalStrut(6));
+        card.add(Box.createVerticalStrut(4));
         card.add(captionLabel);
         return card;
     }

@@ -57,6 +57,7 @@ public class AiSurveyTask extends SwingWorker<String, Void> {
         } finally {
             this.sendBtn.setEnabled(true);
             this.sendBtn.setText("שלח סקר");
+            this.surveyPanel.resetCountdownLabel();
         }
     }
 }

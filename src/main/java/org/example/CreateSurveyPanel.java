@@ -201,11 +201,15 @@ public class CreateSurveyPanel extends JPanel {
                 timeLeft[0]--;
             } else {
                 ((Timer) e.getSource()).stop();
-                this.countdownLabel.setText("הסקר נשלח!");
+                this.countdownLabel.setText("מעבד נתונים...");
                 executeSurveyDispatch(sendBtn);
             }
         });
         timer.start();
+    }
+
+    public void resetCountdownLabel() {
+        this.countdownLabel.setText("");
     }
 
     private void handleAISurvey(JButton sendBtn) {
@@ -330,7 +334,7 @@ public class CreateSurveyPanel extends JPanel {
         JButton btn = new JButton(text);
         btn.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 14));
         btn.setBackground(DashboardFrame.BUTTON_COLOR);
-        btn.setForeground(DashboardFrame.DARK_TEXT);
+        btn.setForeground(Color.WHITE);
         btn.setPreferredSize(new Dimension(170, 40));
         btn.setFocusPainted(false);
         return btn;
