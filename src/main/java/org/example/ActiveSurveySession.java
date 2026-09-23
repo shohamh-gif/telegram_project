@@ -188,7 +188,7 @@ public class ActiveSurveySession {
                 double pct = totalVotes == 0 ? 0.0 : (counts[i] * 100.0 / totalVotes);
                 answerResults.add(new AnswerResult(question.getAnswers().get(i), counts[i], pct));
             }
-            answerResults.sort((a, b) -> b.votes - a.votes); // ממוין לפי שכיחות, הכי גבוה קודם
+            answerResults.sort((a, b) -> b.votes - a.votes);
             results.add(new QuestionResult(question.getQuestion(), answerResults));
         }
         return results;
@@ -201,56 +201,6 @@ public class ActiveSurveySession {
         PollLocation(long chatId, int messageId) {
             this.chatId = chatId;
             this.messageId = messageId;
-        }
-    }
-
-    public static class ParticipantProgress {
-        public final CommunityUser user;
-        public final int answered;
-        public final int total;
-        public final ParticipantStatus status;
-
-        public ParticipantProgress(CommunityUser user, int answered, int total, ParticipantStatus status) {
-            this.user = user;
-            this.answered = answered;
-            this.total = total;
-            this.status = status;
-        }
-    }
-
-    public static class SurveyStatusSnapshot {
-        public final List<ParticipantProgress> progressList;
-        public final int totalParticipants;
-        public final int completedCount;
-        public final long remainingMs;
-
-        public SurveyStatusSnapshot(List<ParticipantProgress> progressList, int totalParticipants, int completedCount, long remainingMs) {
-            this.progressList = progressList;
-            this.totalParticipants = totalParticipants;
-            this.completedCount = completedCount;
-            this.remainingMs = remainingMs;
-        }
-    }
-
-    public static class AnswerResult {
-        public final String text;
-        public final int votes;
-        public final double percentage;
-
-        public AnswerResult(String text, int votes, double percentage) {
-            this.text = text;
-            this.votes = votes;
-            this.percentage = percentage;
-        }
-    }
-
-    public static class QuestionResult {
-        public final String question;
-        public final List<AnswerResult> answers; // ממוין כבר לפי שכיחות
-
-        public QuestionResult(String question, List<AnswerResult> answers) {
-            this.question = question;
-            this.answers = answers;
         }
     }
 }

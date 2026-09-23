@@ -223,7 +223,6 @@ public class CreateSurveyPanel extends JPanel {
         sendBtn.setEnabled(false);
         sendBtn.setText("מייצר סקר...");
 
-        // כאן אנחנו שולחים גם את הפאנל הנוכחי כדי שנוכל לעדכן אותו
         new AiSurveyTask(topic, this.apiService, this.parentFrame.getBot(), this.parentFrame, this, sendBtn).execute();
     }
 

@@ -30,7 +30,7 @@ public class DashboardFrame extends JFrame {
     private JLabel liveTitleLabel;
 
     private JPanel resultsContentPanel;
-    private List<ActiveSurveySession.QuestionResult> lastResults;
+    private List<QuestionResult> lastResults;
 
     @Getter
     @Setter
@@ -43,7 +43,6 @@ public class DashboardFrame extends JFrame {
     public static final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
     public static final String FONT_NAME = "Segoe UI";
 
-    // --- פלטה מאוזנת: וורוד = אקצנט בלבד (באנר, כפתור עיקרי, מצב פעיל), טורקיז = אקצנט משני ---
     public static final Color MAIN_BG_COLOR = new Color(250, 247, 241);   // קרם חמים ונייטרלי
     public static final Color BORDER_COLOR = new Color(226, 217, 205);   // חום-בז' עדין
     public static final Color BUTTON_COLOR = new Color(122, 155, 108);   // ירוק שני - אקצנט משני
@@ -254,7 +253,7 @@ public class DashboardFrame extends JFrame {
         panel.add(this.liveTitleLabel, BorderLayout.NORTH);
 
         JPanel centerStack = new JPanel(new BorderLayout(14, 14));
-        centerStack.setOpaque(false); // שקוף - כדי שתמונת/צבע הרקע יעברו דרכו
+        centerStack.setOpaque(false);
         JPanel cardsRow = new JPanel(new GridLayout(1, 3, 15, 0));
         cardsRow.setOpaque(false);
         this.liveParticipantsValue = new JLabel("0", SwingConstants.CENTER);
@@ -298,7 +297,6 @@ public class DashboardFrame extends JFrame {
     }
 
     private JPanel createStatCard(JLabel valueLabel, String caption, Icon cardIcon) {
-        // יצירת הכרטיסייה עם פינות מעוגלות רכות
         JPanel card = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -346,10 +344,10 @@ public class DashboardFrame extends JFrame {
         });
     }
 
-    public void updateSurveyStatus(ActiveSurveySession.SurveyStatusSnapshot snapshot) {
+    public void updateSurveyStatus(SurveyStatusSnapshot snapshot) {
         SwingUtilities.invokeLater(() -> {
             this.liveStatusTableModel.setRowCount(0);
-            for (ActiveSurveySession.ParticipantProgress p : snapshot.progressList) {
+            for (ParticipantProgress p : snapshot.progressList) {
                 String statusText;
                 switch (p.status) {
                     case COMPLETED:
@@ -413,7 +411,7 @@ public class DashboardFrame extends JFrame {
         this.resultsContentPanel.repaint();
     }
 
-    public void showSurveyResults(List<ActiveSurveySession.QuestionResult> results) {
+    public void showSurveyResults(List<QuestionResult> results) {
         SwingUtilities.invokeLater(() -> {
             this.lastResults = results;
             this.liveTitleLabel.setText("אין סקר פעיל כרגע");
@@ -430,7 +428,7 @@ public class DashboardFrame extends JFrame {
             this.resultsContentPanel.add(Box.createVerticalStrut(18));
 
             int qNum = 1;
-            for (ActiveSurveySession.QuestionResult qr : results) {
+            for (QuestionResult qr : results) {
                 JPanel qPanel = this.buildQuestionResultPanel(qNum, qr);
                 qPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
                 this.resultsContentPanel.add(qPanel);
@@ -444,7 +442,7 @@ public class DashboardFrame extends JFrame {
         });
     }
 
-    private JPanel buildQuestionResultPanel(int qNum, ActiveSurveySession.QuestionResult qr) {
+    private JPanel buildQuestionResultPanel(int qNum, QuestionResult qr) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(Color.WHITE);
@@ -463,7 +461,7 @@ public class DashboardFrame extends JFrame {
         panel.add(Box.createVerticalStrut(12));
 
         int rank = 0;
-        for (ActiveSurveySession.AnswerResult ar : qr.answers) {
+        for (AnswerResult ar : qr.answers) {
             Color fillColor;
             if (ar.votes == 0) {
                 fillColor = STATUS_PENDING_COLOR;

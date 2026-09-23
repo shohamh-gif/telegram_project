@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.Date;
 
 @Getter
+
 public class CommunityUser {
     private long chatId;
     private String firstName;

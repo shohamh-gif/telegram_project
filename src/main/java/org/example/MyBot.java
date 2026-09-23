@@ -29,14 +29,14 @@ public class MyBot extends TelegramLongPollingBot {
         this.dashboard = dashboard;
         this.isSurveyActive = false;
 
-        CommunityUser fakeUser1 = new CommunityUser(111111111L, "משה דמה", "moshe_fake");
-        CommunityUser fakeUser2 = new CommunityUser(222222222L, "דנה טסט", "dana_test");
-
-        this.communityUsers.put(fakeUser1.getChatId(), fakeUser1);
-        this.communityUsers.put(fakeUser2.getChatId(), fakeUser2);
-
-        this.dashboard.addUserToTable(fakeUser1);
-        this.dashboard.addUserToTable(fakeUser2);
+//        CommunityUser fakeUser1 = new CommunityUser(111111111L, "משה דמה", "moshe_fake");
+//        CommunityUser fakeUser2 = new CommunityUser(222222222L, "דנה טסט", "dana_test");
+//
+//        this.communityUsers.put(fakeUser1.getChatId(), fakeUser1);
+//        this.communityUsers.put(fakeUser2.getChatId(), fakeUser2);
+//
+//        this.dashboard.addUserToTable(fakeUser1);
+//        this.dashboard.addUserToTable(fakeUser2);
     }
 
     @Override
