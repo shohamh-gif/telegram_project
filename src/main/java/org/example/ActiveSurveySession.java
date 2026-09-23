@@ -1,29 +1,26 @@
 package org.example;
 
+import lombok.Getter;
+
 import javax.swing.Timer;
 import java.util.*;
 
-/**
- * מנהל סשן של סקר פעיל אחד: משתתפים, מיפוי poll_id -> שאלה, הצבעות בפועל,
- * טיימרים (תזכורת/סיום), ובניית סנאפשוט חי + תוצאות סופיות.
- */
 public class ActiveSurveySession {
 
-    public enum ParticipantStatus { NOT_STARTED, IN_PROGRESS, COMPLETED }
+    private static final int REMINDER_DELAY_MS = 3 * 60 * 1000;
+    private static final int SURVEY_DURATION_MS = 5 * 60 * 1000;
 
-    private static final int REMINDER_DELAY_MS = 3 * 60 * 1000; // 3 דקות
-    private static final int SURVEY_DURATION_MS = 5 * 60 * 1000; // 5 דקות
-
-    private final Map<Long, CommunityUser> participants;        // תמונת מצב של הקהילה ברגע תחילת הסקר
-    private final Map<String, SurveyData> pollIdToQuestion;     // סדר השאלות נשמר (LinkedHashMap)
-    private final Map<String, Map<Long, Integer>> votesByPoll;  // pollId -> (chatId -> אינדקס תשובה שנבחרה)
-    private final Map<String, PollLocation> pollLocations;      // pollId -> היכן ה-poll הזה נמצא בטלגרם (כדי לסגור אותו)
+    @Getter
+    private final Map<Long, CommunityUser> participants;
+    private final Map<String, SurveyData> pollIdToQuestion;
+    private final Map<String, Map<Long, Integer>> votesByPoll;
+    private final Map<String, PollLocation> pollLocations;
 
     private final MyBot bot;
     private final DashboardFrame dashboard;
     private final long startTimeMillis;
-    private volatile boolean closed = false;
 
+    private boolean closed;
     private Timer reminderTimer;
     private Timer endTimer;
     private Timer uiRefreshTimer;
@@ -36,15 +33,10 @@ public class ActiveSurveySession {
         this.bot = bot;
         this.dashboard = dashboard;
         this.startTimeMillis = System.currentTimeMillis();
-
+        this.closed = false;
         startTimers();
     }
 
-    public Map<Long, CommunityUser> getParticipants() {
-        return this.participants;
-    }
-
-    /** נקרא מ-MyBot מיד אחרי ששאלה נשלחה בהצלחה לטלגרם וקיבלנו poll_id + מיקום ההודעה */
     public synchronized void registerPollId(String pollId, SurveyData question, long chatId, int messageId) {
         this.pollIdToQuestion.put(pollId, question);
         this.votesByPoll.put(pollId, new HashMap<>());
@@ -64,29 +56,26 @@ public class ActiveSurveySession {
         this.endTimer.setRepeats(false);
         this.endTimer.start();
 
-        // מרענן את הממשק כל שנייה כדי שה-Countdown וההתקדמות יהיו "חיים"
         this.uiRefreshTimer = new Timer(1000, e -> pushStatusToUi());
         this.uiRefreshTimer.start();
         pushStatusToUi();
     }
 
-    /** נקרא מ-MyBot כאשר מתקבל PollAnswer מטלגרם */
     public synchronized void recordVote(long chatId, String pollId, List<Integer> optionIds) {
         if (this.closed || !this.participants.containsKey(chatId)) {
-            return; // משתמש שהצטרף אחרי תחילת הסקר - לא רלוונטי לסקר הזה
+            return;
         }
         Map<Long, Integer> votesForPoll = this.votesByPoll.get(pollId);
         if (votesForPoll == null) {
-            return; // poll_id שלא שייך לסשן הזה
+            return;
         }
 
         if (optionIds == null || optionIds.isEmpty()) {
-            votesForPoll.remove(chatId); // המשתמש ביטל את הבחירה שלו בסקר הטלגרם
+            votesForPoll.remove(chatId);
         } else {
             boolean isFirstAnswer = !votesForPoll.containsKey(chatId);
-            votesForPoll.put(chatId, optionIds.get(0)); // תשובה יחידה לכל שאלה
+            votesForPoll.put(chatId, optionIds.get(0));
 
-            // סוגרים מיידית את ה-poll האישי הזה כדי לממש "אין לאפשר לענות פעם נוספת" (סעיף 7)
             if (isFirstAnswer) {
                 PollLocation location = this.pollLocations.get(pollId);
                 if (location != null) {
@@ -94,7 +83,6 @@ public class ActiveSurveySession {
                 }
             }
         }
-
         pushStatusToUi();
         checkIfAllFinished();
     }
@@ -116,10 +104,10 @@ public class ActiveSurveySession {
         }
         for (CommunityUser user : this.participants.values()) {
             if (answeredCount(user.getChatId()) < total) {
-                return; // מישהו עוד לא סיים
+                return;
             }
         }
-        endSurvey(); // כולם השלימו את כל השאלות - סוגרים מוקדם
+        endSurvey();
     }
 
     private void sendReminders() {
@@ -140,8 +128,17 @@ public class ActiveSurveySession {
         this.reminderTimer.stop();
         this.endTimer.stop();
         this.uiRefreshTimer.stop();
-
         this.bot.setSurveyActive(false);
+
+        for (Map.Entry<String, PollLocation> entry : this.pollLocations.entrySet()) {
+            String pollId = entry.getKey();
+            PollLocation loc = entry.getValue();
+
+            Map<Long, Integer> votes = this.votesByPoll.get(pollId);
+            if (votes == null || votes.isEmpty()) {
+                this.bot.stopPoll(loc.chatId, loc.messageId);
+            }
+        }
         this.bot.onSurveyEnded();
 
         List<QuestionResult> results = buildResults();
@@ -197,9 +194,6 @@ public class ActiveSurveySession {
         return results;
     }
 
-    // ---- מבני עזר להעברת מידע לממשק ----
-
-    /** מיקום הודעת ה-poll הספציפית בטלגרם (chatId + messageId), נדרש כדי לסגור אותה עם StopPoll */
     private static class PollLocation {
         final long chatId;
         final int messageId;
