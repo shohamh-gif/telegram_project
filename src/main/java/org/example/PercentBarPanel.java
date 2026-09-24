@@ -36,7 +36,7 @@ public class PercentBarPanel extends JPanel {
         int fillWidth = (int) Math.round(w * Math.min(100, Math.max(0, this.percentage)) / 100.0);
         if (fillWidth > 0) {
             g2.setColor(this.fillColor);
-            int drawWidth = Math.max(fillWidth, h); // כדי שהפינות המעוגלות ייראו תקין גם באחוז נמוך
+            int drawWidth = Math.max(fillWidth, h);
             drawWidth = Math.min(drawWidth, w);
             g2.fill(new RoundRectangle2D.Double(0, 0, drawWidth, h, arc, arc));
         }

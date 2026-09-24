@@ -43,18 +43,18 @@ public class DashboardFrame extends JFrame {
     public static final String MEMBERS_PREFIX = "סה\"כ חברים בקהילה: ";
     public static final String FONT_NAME = "Segoe UI";
 
-    public static final Color MAIN_BG_COLOR = new Color(250, 247, 241);   // קרם חמים ונייטרלי
-    public static final Color BORDER_COLOR = new Color(226, 217, 205);   // חום-בז' עדין
-    public static final Color BUTTON_COLOR = new Color(122, 155, 108);   // ירוק שני - אקצנט משני
-    public static final Color DARK_TEXT = new Color(64, 56, 48);         // חום כהה חם, לא אפור
-    public static final Color HEADER_COLOR = new Color(214, 188, 156);  // חום-בז' בהיר - שימוש עדין בלבד
-    public static final Color ACCENT_COLOR = new Color(150, 98, 62);    // חום טרה-קוטה עמוק - אקצנט ראשי
+    public static final Color MAIN_BG_COLOR = new Color(250, 247, 241);
+    public static final Color BORDER_COLOR = new Color(226, 217, 205);
+    public static final Color BUTTON_COLOR = new Color(122, 155, 108);
+    public static final Color DARK_TEXT = new Color(64, 56, 48);
+    public static final Color HEADER_COLOR = new Color(214, 188, 156);
+    public static final Color ACCENT_COLOR = new Color(150, 98, 62);
     public static final Color TAB_UNDERLINE_ACTIVE = new Color(150, 98, 62);
     public static final Color TAB_BAR_BG = Color.WHITE;
     public static final Color TAB_TEXT_INACTIVE = new Color(155, 145, 148);
-    public static final Color PROGRESS_DONE_COLOR = new Color(107, 142, 96);  // ירוק שלווה - גם "הושלם" וגם אקצנט
+    public static final Color PROGRESS_DONE_COLOR = new Color(107, 142, 96);
     public static final Color STATUS_PENDING_COLOR = new Color(219, 212, 202);
-    public static final Color PROGRESS_ACTIVE_COLOR = new Color(196, 156, 92); // זהוב-חרדל - גיוון שלישי
+    public static final Color PROGRESS_ACTIVE_COLOR = new Color(196, 156, 92);
     public static final Color TRACK_GRAY = new Color(238, 233, 226);
 
     public DashboardFrame() {
@@ -87,7 +87,7 @@ public class DashboardFrame extends JFrame {
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
 
         JPanel banner = new JPanel(new BorderLayout());
-        banner.setBackground(ACCENT_COLOR); // תוקן: היה HEADER_COLOR (בהיר מדי) עם טקסט לבן - לא קריא
+        banner.setBackground(ACCENT_COLOR);
         banner.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
 
         JLabel title = new JLabel("Telegram Survey Bot  -  לוח בקרה");
@@ -155,7 +155,7 @@ public class DashboardFrame extends JFrame {
     private void styleTab(JButton tab, boolean active, Icon activeIcon, Icon inactiveIcon) {
         tab.setForeground(active ? ACCENT_COLOR : TAB_TEXT_INACTIVE);
         tab.setIcon(active ? activeIcon : inactiveIcon);
-        tab.setIconTextGap(10); // מרווח נקי ואסתטי בין האייקון לטקסט
+        tab.setIconTextGap(10);
 
         Color underline = active ? TAB_UNDERLINE_ACTIVE : TAB_BAR_BG;
         tab.setBorder(BorderFactory.createCompoundBorder(
@@ -190,7 +190,7 @@ public class DashboardFrame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         JPanel cardPanel = new JPanel(new BorderLayout(0, 15));
-        cardPanel.setBackground(Color.WHITE); // הכרטיסייה נשארת לבנה ואטומה גם מעל תמונת רקע
+        cardPanel.setBackground(Color.WHITE);
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
@@ -268,7 +268,7 @@ public class DashboardFrame extends JFrame {
         this.liveTimeLeftLabel.setFont(new Font(FONT_NAME, Font.BOLD, 18));
         this.liveTimeLeftLabel.setForeground(Color.WHITE);
         this.liveTimeLeftLabel.setOpaque(true);
-        this.liveTimeLeftLabel.setBackground(ACCENT_COLOR); // תוקן: היה HEADER_COLOR (בהיר מדי) עם טקסט לבן
+        this.liveTimeLeftLabel.setBackground(ACCENT_COLOR);
         this.liveTimeLeftLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         this.liveTimeLeftLabel.setVisible(false);
@@ -297,27 +297,15 @@ public class DashboardFrame extends JFrame {
     }
 
     private JPanel createStatCard(JLabel valueLabel, String caption, Icon cardIcon) {
-        JPanel card = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 24, 24);
-                g2.setColor(BORDER_COLOR);
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 24, 24);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        card.setOpaque(false);
+        JPanel card = new RoundedPanel(24, Color.WHITE, BORDER_COLOR);
+
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBorder(BorderFactory.createEmptyBorder(22, 10, 22, 10));
 
         JLabel iconLabel = new JLabel(cardIcon);
         iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        valueLabel.setFont(new Font(FONT_NAME, Font.BOLD, 36)); // פונט קצת יותר דרמטי ומרשים למספרים
+        valueLabel.setFont(new Font(FONT_NAME, Font.BOLD, 36));
         valueLabel.setForeground(ACCENT_COLOR);
         valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -381,12 +369,12 @@ public class DashboardFrame extends JFrame {
 
         this.resultsContentPanel = new JPanel();
         this.resultsContentPanel.setLayout(new BoxLayout(this.resultsContentPanel, BoxLayout.Y_AXIS));
-        this.resultsContentPanel.setOpaque(false); // שקוף - הרקע (תמונה/צבע) עובר דרכו
+        this.resultsContentPanel.setOpaque(false);
 
         JScrollPane scrollPane = new JScrollPane(this.resultsContentPanel);
         scrollPane.setBorder(null);
         scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false); // חובה גם כאן, אחרת ה-viewport מכסה את הרקע
+        scrollPane.getViewport().setOpaque(false);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());

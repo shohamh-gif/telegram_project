@@ -28,15 +28,6 @@ public class MyBot extends TelegramLongPollingBot {
         this.communityUsers = new HashMap<>();
         this.dashboard = dashboard;
         this.isSurveyActive = false;
-
-//        CommunityUser fakeUser1 = new CommunityUser(111111111L, "משה דמה", "moshe_fake");
-//        CommunityUser fakeUser2 = new CommunityUser(222222222L, "דנה טסט", "dana_test");
-//
-//        this.communityUsers.put(fakeUser1.getChatId(), fakeUser1);
-//        this.communityUsers.put(fakeUser2.getChatId(), fakeUser2);
-//
-//        this.dashboard.addUserToTable(fakeUser1);
-//        this.dashboard.addUserToTable(fakeUser2);
     }
 
     @Override
@@ -68,10 +59,9 @@ public class MyBot extends TelegramLongPollingBot {
         }
     }
 
-    /** מגיע כאן כל פעם שמשתמש עונה (או משנה/מבטל תשובה) בסקר Telegram מובנה */
     private void handlePollAnswer(PollAnswer pollAnswer) {
         if (this.currentSession == null) {
-            return; // אין סקר פעיל כרגע - מתעלמים
+            return;
         }
         long chatId = pollAnswer.getUser().getId();
         String pollId = pollAnswer.getPollId();
@@ -94,8 +84,6 @@ public class MyBot extends TelegramLongPollingBot {
         this.isSurveyActive = true;
         this.dashboard.onSurveyStarted(this.currentSession);
 
-        // השליחה בפועל (N משתתפים * M שאלות = הרבה קריאות רשת) רצה ב-thread נפרד,
-        // כדי לא להקפיא את ה-EDT ואת כל חלון ה-Swing בזמן השליחה.
         new Thread(() -> {
             for (CommunityUser user : this.currentSession.getParticipants().values()) {
                 for (SurveyData question : questions) {
@@ -110,7 +98,7 @@ public class MyBot extends TelegramLongPollingBot {
         sendPoll.setChatId(chatId);
         sendPoll.setQuestion(survey.getQuestion());
         sendPoll.setOptions(survey.getAnswers());
-        sendPoll.setIsAnonymous(false);       // חובה! בלי זה אי אפשר לדעת מי הצביע מה
+        sendPoll.setIsAnonymous(false);
         sendPoll.setAllowMultipleAnswers(false);
 
         try {
@@ -125,7 +113,6 @@ public class MyBot extends TelegramLongPollingBot {
         }
     }
 
-    /** סוגר poll אישי ספציפי (הודעה בודדת אצל משתמש בודד) כדי למנוע ממנו לענות עליו פעם נוספת */
     public void stopPoll(long chatId, int messageId) {
         StopPoll stopPoll = new StopPoll();
         stopPoll.setChatId(String.valueOf(chatId));
@@ -137,7 +124,6 @@ public class MyBot extends TelegramLongPollingBot {
         }
     }
 
-    /** נקרא מ-ActiveSurveySession כשהסקר נסגר, כדי לנקות את המצב הגלובלי בבוט */
     public void onSurveyEnded() {
         this.currentSession = null;
     }

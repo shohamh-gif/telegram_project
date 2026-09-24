@@ -25,23 +25,10 @@ public class StyledDialogs {
         dialog.setUndecorated(true);
         dialog.setBackground(new Color(0, 0, 0, 0));
 
-        // הגדלנו את החלון ל-440 כדי לתת לטקסט יותר מקום להתפרס
         int width = 440;
 
-        JPanel content = new JPanel(new BorderLayout(0, 0)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 22, 22));
-                g2.setColor(new Color(230, 227, 228));
-                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 22, 22));
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        content.setOpaque(false);
+        JPanel content = new RoundedPanel(22, Color.WHITE, new Color(230, 227, 228));
+        content.setLayout(new BorderLayout(0, 0));
         content.setBorder(BorderFactory.createEmptyBorder(22, 24, 18, 24));
 
         JPanel topRow = new JPanel(new BorderLayout(14, 0));
@@ -70,7 +57,6 @@ public class StyledDialogs {
         topRow.add(titleLabel, BorderLayout.CENTER);
         topRow.add(badge, BorderLayout.EAST);
 
-        // תוקן: div עם padding-right מבטיח שהאות הראשונה לא תחתך
         JLabel messageLabel = new JLabel("<html><div dir='rtl' style='text-align:right; width:280px; padding-right:8px;'>" + message + "</div></html>");
         messageLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
         messageLabel.setForeground(DashboardFrame.DARK_TEXT);

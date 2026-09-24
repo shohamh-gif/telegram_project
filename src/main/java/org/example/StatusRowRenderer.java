@@ -14,10 +14,8 @@ public class StatusRowRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-        // ממרכז את הטקסט בתא
         setHorizontalAlignment(JLabel.CENTER);
 
-        // צובע את השורה לפי הסטטוס אם היא לא מסומנת
         if (!isSelected) {
             Object statusVal = table.getValueAt(row, 2);
             if ("השלים".equals(statusVal)) {
