@@ -19,6 +19,7 @@ public class ActiveSurveySession {
     private final MyBot bot;
     private final DashboardFrame dashboard;
     private final long startTimeMillis;
+    private final int totalQuestionsCount;
 
     private boolean closed;
     private Timer reminderTimer;
@@ -33,6 +34,7 @@ public class ActiveSurveySession {
         this.bot = bot;
         this.dashboard = dashboard;
         this.startTimeMillis = System.currentTimeMillis();
+        this.totalQuestionsCount = totalQuestionsHint;
         this.closed = false;
         startTimers();
     }
@@ -44,7 +46,7 @@ public class ActiveSurveySession {
     }
 
     private int totalQuestions() {
-        return this.pollIdToQuestion.size();
+        return this.totalQuestionsCount;
     }
 
     private void startTimers() {
@@ -172,25 +174,51 @@ public class ActiveSurveySession {
     }
 
     public synchronized List<QuestionResult> buildResults() {
-        List<QuestionResult> results = new ArrayList<>();
+        Map<String, SurveyData> uniqueQuestions = new LinkedHashMap<>();
+        Map<String, int[]> countsPerQuestion = new HashMap<>();
+
         for (Map.Entry<String, SurveyData> entry : this.pollIdToQuestion.entrySet()) {
-            SurveyData question = entry.getValue();
-            Map<Long, Integer> votes = this.votesByPoll.get(entry.getKey());
-            int[] counts = new int[question.getAnswers().size()];
-            for (int optionIdx : votes.values()) {
-                if (optionIdx >= 0 && optionIdx < counts.length) {
-                    counts[optionIdx]++;
+            String pollId = entry.getKey();
+            SurveyData questionData = entry.getValue();
+            String qText = questionData.getQuestion();
+
+            if (!uniqueQuestions.containsKey(qText)) {
+                uniqueQuestions.put(qText, questionData);
+                countsPerQuestion.put(qText, new int[questionData.getAnswers().size()]);
+            }
+
+            Map<Long, Integer> votesForThisPoll = this.votesByPoll.get(pollId);
+            if (votesForThisPoll != null) {
+                int[] counts = countsPerQuestion.get(qText);
+                for (int optionIdx : votesForThisPoll.values()) {
+                    if (optionIdx >= 0 && optionIdx < counts.length) {
+                        counts[optionIdx]++;
+                    }
                 }
             }
-            int totalVotes = votes.size();
+        }
+
+        List<QuestionResult> results = new ArrayList<>();
+        for (Map.Entry<String, SurveyData> entry : uniqueQuestions.entrySet()) {
+            String qText = entry.getKey();
+            SurveyData questionData = entry.getValue();
+            int[] counts = countsPerQuestion.get(qText);
+
+            int totalVotes = 0;
+            for (int c : counts) {
+                totalVotes += c;
+            }
+
             List<AnswerResult> answerResults = new ArrayList<>();
             for (int i = 0; i < counts.length; i++) {
                 double pct = totalVotes == 0 ? 0.0 : (counts[i] * 100.0 / totalVotes);
-                answerResults.add(new AnswerResult(question.getAnswers().get(i), counts[i], pct));
+                answerResults.add(new AnswerResult(questionData.getAnswers().get(i), counts[i], pct));
             }
+
             answerResults.sort((a, b) -> b.votes - a.votes);
-            results.add(new QuestionResult(question.getQuestion(), answerResults));
+            results.add(new QuestionResult(qText, answerResults));
         }
+
         return results;
     }
 }
