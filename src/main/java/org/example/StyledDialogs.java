@@ -34,21 +34,8 @@ public class StyledDialogs {
         JPanel topRow = new JPanel(new BorderLayout(14, 0));
         topRow.setOpaque(false);
 
-        JLabel badge = new JLabel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(accent);
-                g2.fillOval(0, 0, getWidth(), getHeight());
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
+        CircleBadge badge = new CircleBadge(badgeIcon, accent);
         badge.setPreferredSize(new Dimension(40, 40));
-        badge.setIcon(badgeIcon);
-        badge.setHorizontalAlignment(SwingConstants.CENTER);
-        badge.setVerticalAlignment(SwingConstants.CENTER);
 
         JLabel titleLabel = new JLabel(title, SwingConstants.RIGHT);
         titleLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 18));
@@ -57,11 +44,22 @@ public class StyledDialogs {
         topRow.add(titleLabel, BorderLayout.CENTER);
         topRow.add(badge, BorderLayout.EAST);
 
-        JLabel messageLabel = new JLabel("<html><div dir='rtl' style='text-align:right; width:280px; padding-right:8px;'>" + message + "</div></html>");
-        messageLabel.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
-        messageLabel.setForeground(DashboardFrame.DARK_TEXT);
-        messageLabel.setBorder(BorderFactory.createEmptyBorder(14, 0, 18, 54));
-        messageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        int contentTextWidth = 280;
+        JTextArea messageArea = new JTextArea(message);
+        messageArea.setEditable(false);
+        messageArea.setFocusable(false);
+        messageArea.setOpaque(false);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+        messageArea.setFont(new Font(DashboardFrame.FONT_NAME, Font.PLAIN, 14));
+        messageArea.setForeground(DashboardFrame.DARK_TEXT);
+        messageArea.applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        messageArea.setSize(contentTextWidth, Short.MAX_VALUE);
+        int wrappedTextHeight = messageArea.getPreferredSize().height;
+
+        messageArea.setBorder(BorderFactory.createEmptyBorder(14, 0, 18, 54));
+        messageArea.setPreferredSize(new Dimension(contentTextWidth + 54, wrappedTextHeight + 14 + 18));
 
         JButton okBtn = new JButton("אישור");
         okBtn.setFont(new Font(DashboardFrame.FONT_NAME, Font.BOLD, 14));
@@ -77,7 +75,7 @@ public class StyledDialogs {
         buttonRow.add(okBtn);
 
         content.add(topRow, BorderLayout.NORTH);
-        content.add(messageLabel, BorderLayout.CENTER);
+        content.add(messageArea, BorderLayout.CENTER);
         content.add(buttonRow, BorderLayout.SOUTH);
 
         dialog.setContentPane(content);

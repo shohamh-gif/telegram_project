@@ -27,7 +27,7 @@ public class ModernScrollBarUI extends BasicScrollBarUI {
     @Override
     protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
         Graphics2D g2 = (Graphics2D) g.create();
-        g2.setColor(DashboardFrame.MAIN_BG_COLOR); // רקע שמשתלב בדיוק עם הפאנל
+        g2.setColor(DashboardFrame.MAIN_BG_COLOR);
         g2.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
         g2.dispose();
     }

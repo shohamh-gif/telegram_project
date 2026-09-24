@@ -193,14 +193,4 @@ public class ActiveSurveySession {
         }
         return results;
     }
-
-    private static class PollLocation {
-        final long chatId;
-        final int messageId;
-
-        PollLocation(long chatId, int messageId) {
-            this.chatId = chatId;
-            this.messageId = messageId;
-        }
-    }
 }
